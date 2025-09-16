@@ -1,16 +1,15 @@
-// import "@nomicfoundation/hardhat-toolbox";
 {
   "compilerOptions": {
     "lib": ["es2023"],
     "module": "node16",
     "target": "es2022",
-    "checkJs": true,
+    "checkJs": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "moduleResolution": "node16",
     "outDir": "dist",
-    "types": ["mocha", "chai", "node"]
+    "types": ["mocha", "chai", "node"],
   },
   "include": ["./"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist"],
 }
