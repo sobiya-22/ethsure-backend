@@ -1,38 +1,31 @@
-import { createContext, useState } from "react";
-import axios from "axios";
+import React, { createContext, useState, useEffect } from "react";
 
 export const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
+const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem("token") || null);
 
-  const loginUser = async (payload) => {
-    const res = await axios.post("http://localhost:5000/api/auth/login", payload);
-    setUser(res.data.user);
-    setToken(res.data.token);
-    localStorage.setItem("token", res.data.token);
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) setUser(JSON.parse(storedUser));
+  }, []);
+
+  const login = (userData, token) => {
+    localStorage.setItem("user", JSON.stringify(userData));
+    localStorage.setItem("token", token);
+    setUser(userData);
   };
 
   const logout = () => {
+    localStorage.clear();
     setUser(null);
-    setToken(null);
-    localStorage.removeItem("token");
-  };
-
-  const updateRole = async (role) => {
-    const res = await axios.put(
-      "http://localhost:5000/api/auth/role",
-      { role },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    setUser(res.data.user);
-    setToken(res.data.token);
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loginUser, logout, updateRole }}>
+    <AuthContext.Provider value={{ user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+export default AuthProvider;
