@@ -23,3 +23,6 @@ ignition/
 backend/node_modules
 
 .env
+
+backend/private.pem
+backend/public.pem

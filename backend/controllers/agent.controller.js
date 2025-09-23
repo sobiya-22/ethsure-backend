@@ -52,7 +52,8 @@ const completeAgentKYC = asyncHandler(async (req, res) => {
     agent_email,
     agent_phone,
     license_number,
-    profile_photo_url,
+      profile_photo_url,
+    
     company_did,
     vc_hash, //  VC hash (IPFS CID hash) yet to be added
   } = req.body;
