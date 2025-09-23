@@ -11,7 +11,7 @@ const CustomerSchema = new mongoose.Schema(
         customer_did: {
             type: String,
             // required: true,
-            unique: true,
+            // unique: true,
             trim: true
         },
         wallet_address: {
