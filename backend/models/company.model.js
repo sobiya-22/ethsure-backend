@@ -9,7 +9,7 @@ const CompanySchema = new mongoose.Schema({
     company_did: {
         type: String,
         required: true,
-        unique: true,
+        // unique: true,
         trim: true,
     },
     wallet_address: {
