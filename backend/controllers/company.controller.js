@@ -1,6 +1,6 @@
 // controllers/company.controller.js
 import companyModel from "../models/company.model.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
+import {asyncHandler} from '../utils/asyncHandler.js'
 import { registerCompanyOnChain } from "../blockchain/agentRegistry.js";
 
 export const registerCompany = asyncHandler(async (req, res) => {

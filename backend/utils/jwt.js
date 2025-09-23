@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import fs from "fs";
 
 const privateKey = fs.readFileSync("private.pem", "utf8");
+const publicKey = fs.readFileSync("public.pem", "utf8");
 const ISSUER = process.env.JWT_ISSUER;
 const KID = process.env.JWT_KID;
 
@@ -20,4 +21,8 @@ export function issueJWT(email,role) {
       expiresIn: "1h",
     }
   );
+}
+
+export function verifyJWT(token) {
+  return jwt.verify(token, publicKey, { algorithms: ["RS256"] });
 }

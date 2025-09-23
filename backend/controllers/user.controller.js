@@ -1,10 +1,10 @@
-import User from "../models/user.model";
+import User from "../models/user.model.js";
 import Customer from "../models/customer.model.js";
 import Agent from "../models/agent.model.js";
-import asyncHandler from "../utils/asyncHandler.js";
+import {asyncHandler} from "../utils/asyncHandler.js";
 import { issueJWT } from "../utils/jwt.js";
 // Register User
-export const registerUser = asyncHandler(async (req, res) => {
+const registerUser = asyncHandler(async (req, res) => {
   try {
     const { wallet_address, email } = req.body;
 
@@ -36,7 +36,7 @@ export const registerUser = asyncHandler(async (req, res) => {
 });
 
 // PATCH /api/user/assign-role
-export const assignRole = asyncHandler(async (req, res) => {
+const assignRole = asyncHandler(async (req, res) => {
   const { wallet_address, role } = req.body;
 
   if (!wallet_address || !role) {
@@ -107,3 +107,5 @@ export const assignRole = asyncHandler(async (req, res) => {
     token,
   });
 });
+
+export { registerUser, assignRole };

@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import { JsonRpcProvider } from "ethers/providers";
 import connectDB from "./utils/connectDB.js";
 import dotenv from "dotenv";
+import userRoutes from './routes/user.route.js'
 import companyRoutes from "./routes/company.route.js";
 import fs from "fs";
 
@@ -11,7 +12,8 @@ dotenv.config();
 const PORT = process.env.PORT;
 const app = express();
 app.use(express.json());
-app.use("/api/company", companyRoutes);
+app.use("/api/users", userRoutes);
+// app.use("/api/company", companyRoutes);
 
 app.get("/.well-known/jwks.json", (req, res) => {
   const jwks = fs.readFileSync("jwks.json", "utf8");
