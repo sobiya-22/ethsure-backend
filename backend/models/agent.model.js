@@ -10,7 +10,7 @@ const AgentSchema = new mongoose.Schema(
     },
     agent_did: {
       type: String,
-      unique: true,
+      // unique: true,
       trim: true,
     },
     wallet_address: {
