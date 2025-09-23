@@ -7,6 +7,8 @@ import companyRoutes from "./routes/company.route.js";
 import fs from "fs";
 
 dotenv.config();
+
+const PORT = process.env.PORT;
 const app = express();
 app.use(express.json());
 app.use("/api/company", companyRoutes);
@@ -17,7 +19,7 @@ app.get("/.well-known/jwks.json", (req, res) => {
   res.send(jwks);
 });
 
-app.listen(4000, () => {
+app.listen(PORT, () => {
   console.log("backend running on port 4000");
   connectDB();
 });
