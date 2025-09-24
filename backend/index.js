@@ -6,12 +6,18 @@ import dotenv from "dotenv";
 import userRoutes from './routes/user.route.js'
 import companyRoutes from "./routes/company.route.js";
 import fs from "fs";
-
+import cors from "cors";
 dotenv.config();
 
 const PORT = process.env.PORT;
 const app = express();
 app.use(express.json());
+
+app.use(cors({
+  origin: ["http://localhost:5173"],
+  methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+  credentials: true,
+}));
 app.use("/api/users", userRoutes);
 // app.use("/api/company", companyRoutes);
 
