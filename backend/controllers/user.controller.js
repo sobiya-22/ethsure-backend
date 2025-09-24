@@ -38,6 +38,7 @@ const registerUser = asyncHandler(async (req, res) => {
 // PATCH /api/user/assign-role
 const assignRole = asyncHandler(async (req, res) => {
   const { wallet_address, role,name,profile_photo_url } = req.body;
+  console.log("assignRole body:", req.body);
 
   if (!wallet_address || !role) {
     return res.status(400).json({ error: "wallet address and role are required" });
