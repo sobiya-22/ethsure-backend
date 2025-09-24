@@ -51,7 +51,7 @@ const assignRole = asyncHandler(async (req, res) => {
 
   // already has a role
   if (user.role) {
-    return res.status(200).json({ message: `User already registred as a ${user.role}`, role: user.role });
+    return res.json({ message: `User already registred as a ${user.role}`, role: user.role });
   }
   
   let roleDoc;
