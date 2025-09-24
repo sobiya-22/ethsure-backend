@@ -37,7 +37,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
 // PATCH /api/user/assign-role
 const assignRole = asyncHandler(async (req, res) => {
-  const { wallet_address, role } = req.body;
+  const { wallet_address, role,name,profile_photo_url } = req.body;
 
   if (!wallet_address || !role) {
     return res.status(400).json({ error: "wallet address and role are required" });
@@ -60,7 +60,9 @@ const assignRole = asyncHandler(async (req, res) => {
         user: user._id,
         // customer_did: `did:customer:${Date.now()}`,
         wallet_address: user.wallet_address,
-        email : user.email,
+        email: user.email,
+        name: name,
+        profile_photo_url: profile_photo_url,
       });
       break;
 
@@ -69,7 +71,9 @@ const assignRole = asyncHandler(async (req, res) => {
         user: user._id,
         // agent_did: `did:agent:${Date.now()}`,
         wallet_address: user.wallet_address,
-        email : user.email,
+        email: user.email,
+        name: name,
+        profile_photo_url: profile_photo_url,
       });
       break;
 
