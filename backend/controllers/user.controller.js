@@ -61,7 +61,7 @@ const assignRole = asyncHandler(async (req, res) => {
         user: user._id,
         // customer_did: `did:customer:${Date.now()}`,
         wallet_address: user.wallet_address,
-        email: user.email,
+        customer_email: user.email,
         name: name,
         profile_photo_url: profile_photo_url,
       });
@@ -72,7 +72,7 @@ const assignRole = asyncHandler(async (req, res) => {
         user: user._id,
         // agent_did: `did:agent:${Date.now()}`,
         wallet_address: user.wallet_address,
-        email: user.email,
+        agent_email: user.email,
         name: name,
         profile_photo_url: profile_photo_url,
       });
