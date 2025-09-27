@@ -28,6 +28,6 @@ app.get("/.well-known/jwks.json", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log("backend running on port 4000");
+  console.log("backend running on port 5000");
   connectDB();
 });

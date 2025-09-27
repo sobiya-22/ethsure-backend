@@ -1,7 +1,7 @@
 import User from "../models/user.model.js";
 import Customer from "../models/customer.model.js";
 import Agent from "../models/agent.model.js";
-import {asyncHandler} from "../utils/asyncHandler.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 import { issueJWT } from "../utils/jwt.js";
 // Register User
 const registerUser = asyncHandler(async (req, res) => {
@@ -37,7 +37,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
 // PATCH /api/user/assign-role
 const assignRole = asyncHandler(async (req, res) => {
-  const { wallet_address, role,name,profile_photo_url } = req.body;
+  const { wallet_address,did, role, name, profile_photo_url } = req.body;
   console.log("assignRole body:", req.body);
 
   if (!wallet_address || !role) {
@@ -53,16 +53,16 @@ const assignRole = asyncHandler(async (req, res) => {
   if (user.role) {
     return res.json({ message: `User already registred as a ${user.role}`, role: user.role });
   }
-  
+
   let roleDoc;
   switch (role) {
     case "customer":
       roleDoc = await Customer.create({
         user: user._id,
-        // customer_did: `did:customer:${Date.now()}`,
+        customer_did: did,
         wallet_address: user.wallet_address,
         customer_email: user.email,
-        name: name,
+        customer_name: name,
         profile_photo_url: profile_photo_url,
       });
       break;
@@ -70,10 +70,10 @@ const assignRole = asyncHandler(async (req, res) => {
     case "agent":
       roleDoc = await Agent.create({
         user: user._id,
-        // agent_did: `did:agent:${Date.now()}`,
+        agent_did: did,
         wallet_address: user.wallet_address,
         agent_email: user.email,
-        name: name,
+        agent_name: name,
         profile_photo_url: profile_photo_url,
       });
       break;
@@ -103,7 +103,7 @@ const assignRole = asyncHandler(async (req, res) => {
   await user.save();
 
   // now issue token
-  const token = issueJWT(user.email,user.role );
+  const token = issueJWT(user.email, user.role);
 
   return res.status(200).json({
     message: "Role assigned",
