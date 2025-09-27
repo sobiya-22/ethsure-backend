@@ -13,6 +13,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@pinata/sdk": "^2.1.0",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "did-jwt-vc": "^4.0.16",
