@@ -1,6 +1,7 @@
 import User from "../models/user.model.js";
 import Customer from "../models/customer.model.js";
 import Agent from "../models/agent.model.js";
+import Company from "../models/company.model.js"
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { issueJWT } from "../utils/jwt.js";
 // Register User
@@ -22,12 +23,22 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
     // Existing user, issue JWT with role
-    const token = issueJWT(user);
+    let roleData = null;
 
+    if (user.role === "customer") {
+      roleData = await Customer.findOne({ userId: user._id });
+    } else if (user.role === "agent") {
+      roleData = await Agent.findOne({ userId: user._id });
+    } else if (user.role === "company") {
+      roleData = await Company.findOne({ userId: user._id });
+    }
+    
+    const token = issueJWT(user);
     res.json({
       newUser: false,
       token,
       role: user.role,
+      data: roleData || null,
     });
   } catch (error) {
     console.error("Error in registerUser:", error);
@@ -37,11 +48,11 @@ const registerUser = asyncHandler(async (req, res) => {
 
 // PATCH /api/user/assign-role
 const assignRole = asyncHandler(async (req, res) => {
-  const { wallet_address,did, role, name, profile_photo_url } = req.body;
+  const { wallet_address, did, role, name, profile_photo_url } = req.body;
   console.log("assignRole body:", req.body);
 
-  if (!wallet_address || !role) {
-    return res.status(400).json({ error: "wallet address and role are required" });
+  if (!wallet_address || !role || !name) {
+    return res.status(400).json({ error: "wallet address,name and role are required" });
   }
 
   const user = await User.findOne({ wallet_address });
@@ -78,14 +89,14 @@ const assignRole = asyncHandler(async (req, res) => {
       });
       break;
 
-    // case "company":
-    //   roleDoc = await Company.create({
-    //     user: user._id,
-    //     company_did: `did:company:${Date.now()}`,
-    //     wallet_address: user.wallet_address,
-    //     registered_on: new Date(),
-    //   });
-    //   break;
+    case "company":
+      roleDoc = await Company.create({
+        user: user._id,
+        company_name: name,
+        company_did: did,
+        wallet_address: user.wallet_address,
+      });
+      break;
 
     // case "nominee":
     //   roleDoc = await Nominee.create({
