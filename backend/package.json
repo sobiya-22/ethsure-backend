@@ -24,6 +24,7 @@
     "jwks-rsa": "^3.2.0",
     "mongoose": "^8.18.1",
     "node-jose": "^2.2.0",
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "twilio": "^5.10.2"
   }
 }
