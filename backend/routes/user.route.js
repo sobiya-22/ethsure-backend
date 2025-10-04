@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.post("/login", registerUser);
 router.patch("/assign-role", assignRole);
-router.get("/me", authMiddleware, (req, res) => {
-  res.json({ user: req.user });
-});
+// router.get("/me", authMiddleware, (req, res) => {
+//   res.json({ user: req.user });
+// });
 export default router;
