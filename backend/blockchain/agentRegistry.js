@@ -1,6 +1,6 @@
 import { getContract } from "./config.js";
 
-const registryAddress = process.env.REGISTRY_ADDRESS;
+const registryAddress = process.env.AGENT_REGISTRY_ADDRESS;
 const abiPath = "artifacts/contracts/AgentRegistry.sol/AgentRegistry.json";
 
 // Register a company DID to the caller's wallet
