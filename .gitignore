@@ -1,6 +1,6 @@
 # Ignore all .env files at all levels
 .env
-**/.env
+
 
 # Node.js
 node_modules
