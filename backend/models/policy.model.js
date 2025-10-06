@@ -1,11 +1,6 @@
 import mongoose from "mongoose";
 
 const PolicySchema = new mongoose.Schema({
-    company: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Company",
-        required: true
-    },
     policy_id: {
         type: String,
         required: true,
@@ -17,12 +12,6 @@ const PolicySchema = new mongoose.Schema({
         required: true,
         trim: true
     },
-    policy_type: {
-        type: String,
-        required: true,
-        enum: ["life", "health", "auto", "home", "travel", "business"],
-        trim: true
-    },
     description: {
         type: String,
         required: true,
@@ -31,40 +20,30 @@ const PolicySchema = new mongoose.Schema({
     coverage_amount: {
         type: Number,
         required: true,
+        default: 1000000,
         min: 0
     },
     premium_amount: {
         type: Number,
         required: true,
+        default: 50000,
         min: 0
     },
     premium_frequency: {
         type: String,
         enum: ["monthly", "quarterly", "semi-annual", "annual"],
-        default: "monthly"
+        default: "annual"
     },
     policy_duration: {
-        type: Number, // in years
+        type: Number,
         required: true,
+        default: 20,
         min: 1
     },
-    eligibility_criteria: {
-        min_age: {
-            type: Number,
-            default: 18
-        },
-        max_age: {
-            type: Number,
-            default: 65
-        },
-        other_requirements: {
-            type: String,
-            default: ""
-        }
-    },
-    terms_and_conditions: {
+    status: {
         type: String,
-        required: true
+        enum: ["created", "active", "ongoing", "claimed", "cancelled", "expired"],
+        default: "created"
     },
     is_active: {
         type: Boolean,
