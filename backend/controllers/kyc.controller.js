@@ -164,47 +164,5 @@ const resendKYCOTP = asyncHandler(async (req, res) => {
   return sendKYCOTP(req, res);
 });
 
-// CHECK KYC STATUS
-const checkKYCStatus = asyncHandler(async (req, res) => {
-  const { wallet_address, user_type } = req.body;
 
-  // Validate input
-  if (!wallet_address || !user_type) {
-    return res.status(400).json({
-      success: false,
-      message: "Wallet address and user type are required"
-    });
-  }
-
-  if (!["customer", "agent"].includes(user_type)) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid user type"
-    });
-  }
-
-  // Select the correct model
-  const Model = user_type === "customer" ? Customer : Agent;
-
-  // Find user
-  const user = await Model.findOne({ wallet_address: wallet_address.toLowerCase() });
-
-  if (!user) {
-    return res.status(404).json({
-      success: false,
-      message: `${user_type} not found`
-    });
-  }
-
-  // Return KYC status
-  return res.status(200).json({
-    success: true,
-    data: {
-      wallet_address: user.wallet_address,
-      user_type,
-      kyc_status: user.kyc_status || "pending"
-    }
-  });
-});
-
-export {generateOTP , otpStore , OTP_EXPIRY , twilioClient , sendKYCOTP , verifyKYCOTP , resendKYCOTP , checkKYCStatus }
+export {generateOTP , otpStore , OTP_EXPIRY , twilioClient , sendKYCOTP , verifyKYCOTP , resendKYCOTP}

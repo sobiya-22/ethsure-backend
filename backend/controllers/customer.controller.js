@@ -1,8 +1,5 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
-import Customer from "../models/customer.model.js";
-import Agent from "../models/agent.model.js";
-import Policy from "../models/policy.model.js";
-import PolicyRequest from "../models/policyRequest.model.js"; 
+import Customer from "../models/customer.model.js"; 
 
 //get customer
 const getCustomer = asyncHandler(async (req, res) => {
@@ -55,7 +52,5 @@ const updateCustomer = asyncHandler(async (req, res) => {
     success: true, 
     data: customer });
 });
-
-//send req for policy 
 
 export {getCustomer , updateCustomer};

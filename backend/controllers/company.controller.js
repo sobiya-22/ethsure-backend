@@ -19,6 +19,115 @@ const verifyCompanyAccess = async (wallet_address) => {
   return { valid: true, company };
 };
 
+//Get list of agents waiting for approval (KYC verified but not approved)
+const getPendingAgents = asyncHandler(async (req, res) => {
+  const { company_wallet_address } = req.body;
+
+  if (!company_wallet_address) {
+    return res.status(400).json({
+      success: false,
+      message: "Company wallet address is required"
+    });
+  }
+
+  // Verify company access
+  const { valid, message } = await verifyCompanyAccess(company_wallet_address);
+  if (!valid) {
+    return res.status(403).json({ 
+      success: false, 
+      message 
+    });
+  }
+
+  // Find agents with verified KYC but not approved yet
+  const pendingAgents = await Agent.find({
+    kyc_status: "verified",
+    is_approved: false
+  }).populate("user", "email");
+
+  res.status(200).json({
+    success: true,
+    count: pendingAgents.length,
+    data: pendingAgents
+  });
+});
+
+//Get list of approved agents
+const getApprovedAgents = asyncHandler(async (req, res) => {
+
+  const { company_wallet_address } = req.body;
+
+  if (!company_wallet_address) {
+    return res.status(400).json({
+      success: false,
+      message: "Company wallet address is required"
+    });
+  }
+
+  // Verify company access
+  const { valid, message } = await verifyCompanyAccess(company_wallet_address);
+  if (!valid) {
+    return res.status(403).json({ success: false, message });
+  }
+
+  // Find approved agents
+  const approvedAgents = await Agent.find({
+    kyc_status: "verified",
+    is_approved: true
+  }).populate("user", "email");
+
+  res.status(200).json({
+    success: true,
+    count: approvedAgents.length,
+    data: approvedAgents
+  });
+});
+
+//Get all agents with their verification status
+const getAllAgents = asyncHandler(async (req, res) => {
+  const { company_wallet_address } = req.body;
+
+  if (!company_wallet_address) {
+    return res.status(400).json({
+      success: false,
+      message: "Company wallet address is required"
+    });
+  }
+  // Verify company access
+  const { valid, message } = await verifyCompanyAccess(company_wallet_address);
+  if (!valid) {
+    return res.status(403).json({ success: false, message });
+  }
+  // Get all agents
+  const allAgents = await Agent.find({})
+    .populate("user", "email")
+    .lean();
+
+  // Categorize agents
+  const categorized = {
+    pending_kyc: allAgents.filter(a => a.kyc_status === "pending"),
+
+    pending_approval: allAgents.filter(a => 
+      a.kyc_status === "verified" && !a.is_approved
+    ),
+
+    approved: allAgents.filter(a => 
+      a.kyc_status === "verified" && a.is_approved
+    )
+  };
+
+  res.status(200).json({
+    success: true,
+    total: allAgents.length,
+    counts: {
+      pending_kyc: categorized.pending_kyc.length,
+      pending_approval: categorized.pending_approval.length,
+      approved: categorized.approved.length
+    },
+    data: categorized
+  });
+});
+
 // Approve an agent after KYC verification
 const approveAgent = asyncHandler(async (req, res) => {
 
@@ -126,7 +235,9 @@ const rejectAgent = asyncHandler(async (req, res) => {
 });
 
 export {
-  verifyCompanyAccess ,
+  getPendingAgents,
+  getApprovedAgents,
+  getAllAgents,
   approveAgent,
   rejectAgent
 };
