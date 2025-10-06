@@ -1,5 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import Customer from "../models/customer.model.js"; 
+import Agent from "../models/agent.model.js";
+import Policy from "../models/policy.model.js";
 
 //get customer
 const getCustomer = asyncHandler(async (req, res) => {
@@ -71,7 +73,7 @@ const sendPolicyRequest = asyncHandler(async (req, res) => {
   const agent = await Agent.findOne({ wallet_address: agent_wallet_address });
   if (!agent) return res.status(404).json({ success: false, message: "Agent not found" });
 
-  const policy = await Policy.findById(policy_id);
+  const policy = await Policy.findOne({policy_id});
   if (!policy) return res.status(404).json({ success: false, message: "Policy not found" });
 
   // Add request to agent’s policy_requests array

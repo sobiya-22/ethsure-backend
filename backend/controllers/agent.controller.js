@@ -232,6 +232,7 @@ const rejectPolicyRequest = asyncHandler(async (req, res) => {
 });
 
 const sendAssociationRequest = asyncHandler(async (req, res) => {
+  
   const { agent_wallet_address } = req.body;
 
   if (!agent_wallet_address) {
