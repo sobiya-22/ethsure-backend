@@ -1,14 +1,20 @@
 import mongoose from "mongoose";
 
 const PolicySchema = new mongoose.Schema({
-    policy_name: {
+    // policy_name: {
+    //     type: String,
+    //     // required: true,
+    //     trim: true
+    // },
+    // description: {
+    //     type: String,
+    //     // required: true,
+    //     trim: true
+    // },
+     policy_id: {
         type: String,
-        // required: true,
-        trim: true
-    },
-    description: {
-        type: String,
-        // required: true,
+        unique: true,
+        required: true,
         trim: true
     },
     coverage_amount: {
@@ -34,10 +40,23 @@ const PolicySchema = new mongoose.Schema({
         default: 20,
         min: 1
     },
+     customer: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: "Customer" 
+    },
+    agent: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: "Agent" 
+    },
     status: {
         type: String,
         enum: ["not-active", "created", "active", "ongoing", "claimed", "cancelled"],
         default: "not-active"
+    },
+    nominee: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Nominee",
+        default: null
     },
     created_date: {
         type: Date,

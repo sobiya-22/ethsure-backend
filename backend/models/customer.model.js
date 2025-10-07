@@ -59,6 +59,12 @@ const CustomerSchema = new mongoose.Schema(
             type: Date,
             default: Date.now
         },
+        nominee:[
+        { 
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Nominee"
+        }
+        ],
     },
     {
         timestamps: true
