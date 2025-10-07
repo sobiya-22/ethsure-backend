@@ -19,11 +19,7 @@ app.use(cors({
   credentials: true,
 }));
 app.use("/api/users", userRoutes);
-app.use("/api/company", companyRoutes);
-app.use("/api/kyc" , kycRoutes );
-app.use("/api/agent" , agentRoutes);
-app.use("/api/customer" , customerRoutes);
-app.use("/api/policy", policyRoutes);
+// app.use("/api/company", companyRoutes);
 
 app.get("/.well-known/jwks.json", (req, res) => {
   const jwks = fs.readFileSync("jwks.json", "utf8");

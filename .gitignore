@@ -1,6 +1,26 @@
-# Ignore all .env files at all levels
-.env
+# Node modules
+/node_modules
 
+# Compilation output
+/dist
+
+# pnpm deploy output
+/bundle
+
+# Hardhat Build Artifacts
+/artifacts
+
+# Hardhat compilation (v2) support directory
+/cache
+
+# Typechain output
+/types
+
+# Hardhat coverage reports
+/coverage
+ignition/
+
+backend/node_modules
 
 # .env
 
