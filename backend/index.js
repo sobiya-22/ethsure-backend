@@ -4,12 +4,7 @@ import { JsonRpcProvider } from "ethers/providers";
 import connectDB from "./utils/connectDB.js";
 import dotenv from "dotenv";
 import userRoutes from './routes/user.route.js'
-import kycRoutes from "./routes/kyc.route.js"
-import companyRoutes from "./routes/company.route.js";
-import agentRoutes from "./routes/agent.route.js";
-import customerRoutes from "./routes/customer.route.js"
-import policyRoutes from "./routes/policy.route.js"
-
+// import companyRoutes from "./routes/company.route.js";
 import fs from "fs";
 import cors from "cors";
 dotenv.config();
