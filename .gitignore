@@ -1,6 +1,2 @@
-# Ignore all .env files at all levels
 .env
-
-
-# .env
-
+node_modules
