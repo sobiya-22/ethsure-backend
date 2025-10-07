@@ -14,6 +14,9 @@ export default {
       },
     },
   },
+  plugins: [
+    hardhatVerify,
+  ],
   networks: {
     hardhat: {
       // default in-memory network, no need to configure unless custom settings
@@ -23,6 +26,9 @@ export default {
       url: process.env.SEPOLIA_RPC || "",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     },
+  },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY,
   },
 };
 
