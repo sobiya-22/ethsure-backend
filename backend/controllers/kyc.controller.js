@@ -164,5 +164,40 @@ const resendKYCOTP = asyncHandler(async (req, res) => {
   return sendKYCOTP(req, res);
 });
 
+//check user kyc status
+const checkKYCStatus = asyncHandler(async (req, res) => {
+  const { wallet_address, user_role } = req.body;
 
-export {generateOTP , otpStore , OTP_EXPIRY , twilioClient , sendKYCOTP , verifyKYCOTP , resendKYCOTP}
+  if (!wallet_address || !user_role) {
+    return res.status(400).json({
+      success: false,
+      message: "Wallet address and user role are required",
+    });
+  }
+
+  if (!["customer", "agent"].includes(user_role)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid user role",
+    });
+  }
+
+  const Model = user_role === "customer" ? Customer : Agent;
+
+  const user = await Model.findOne({ wallet_address: wallet_address.toLowerCase() });
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: `${user_role} not found`,
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    kyc_status: user.kyc_status || "pending",
+    message: `KYC status for ${user_role} is ${user.kyc_status || "pending"}`,
+  });
+});
+
+export {generateOTP , otpStore , OTP_EXPIRY , twilioClient , sendKYCOTP , verifyKYCOTP , resendKYCOTP , checkKYCStatus}

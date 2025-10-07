@@ -64,6 +64,18 @@ const AgentSchema = new mongoose.Schema(
       type: Date,
       default: Date.now
     },
+    association_requests: [
+      {
+        associated_company: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Company",
+          unique: true
+        },
+        status: { type: String, enum: ["pending", "approved", "rejected"] },
+        request_date: { type: Date, default: Date.now },
+        response_date: { type: Date }
+      }
+    ],
   },
   {
     timestamps: true
