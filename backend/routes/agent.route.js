@@ -9,4 +9,7 @@ const router = express.Router();
 router.post("/get", getAgent);               
 router.put("/update", updateAgent);        
 
+router.post("/get", getAgent);               
+router.put("/update", updateAgent);        
+
 export default router;
