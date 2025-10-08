@@ -65,35 +65,16 @@ const AgentSchema = new mongoose.Schema(
       default: Date.now
     },
     association_requests: [
-    {
-      status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
-      request_date: { type: Date, default: Date.now },
-      response_date: { type: Date }
-    }
-  ]
-  ,
-   policy_requests: [
-    {
-        customer_wallet_address: { 
-            type: String, 
-            required: true 
+      {
+        associated_company: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Company",
+          unique: true
         },
-        policy_id: { 
-            type: String, 
-            required: true 
-        },
-        policy_name: { type: String },
-        status: {
-        type: String,
-        enum: ["pending", "approved", "rejected"],
-        default: "pending"
-        },
-        request_date: { 
-            type: Date, 
-            default: Date.now 
-        },
+        status: { type: String, enum: ["pending", "approved", "rejected"] },
+        request_date: { type: Date, default: Date.now },
         response_date: { type: Date }
-    }
+      }
     ],
   },
   {

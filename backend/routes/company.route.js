@@ -21,4 +21,10 @@ router.post("/agents/all", getAllAgents);
 router.post("/agents/approve", approveAgent);
 router.post("/agents/reject", rejectAgent);
 
+router.post("/agents/pending", getPendingAgents);
+router.post("/agents/approved", getApprovedAgents);
+router.post("/agents/all", getAllAgents);
+router.post("/agents/approve", approveAgent);
+router.post("/agents/reject", rejectAgent);
+
 export default router ;
