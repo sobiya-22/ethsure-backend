@@ -59,6 +59,15 @@ const CustomerSchema = new mongoose.Schema(
             type: Date,
             default: Date.now
         },
+<<<<<<< Updated upstream
+=======
+        // nominee:[
+        // { 
+        //     type: mongoose.Schema.Types.ObjectId,
+        //     ref: "Nominee"
+        // }
+        // ],
+>>>>>>> Stashed changes
     },
     {
         timestamps: true

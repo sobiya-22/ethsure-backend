@@ -1,6 +1,8 @@
 # Ignore all .env files at all levels
 .env
-
-
-# .env
+/types
+/node_modules
+artifacts
+backend/node_modules
+ignition
 
