@@ -1,19 +1,77 @@
 import mongoose from "mongoose";
 
 const PolicySchema = new mongoose.Schema({
-    // policy_name: {
-    //     type: String,
-    //     // required: true,
-    //     trim: true
-    // },
-    // description: {
-    //     type: String,
-    //     // required: true,
-    //     trim: true
-    // },
-     policy_id: {
+    customer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Customer"
+    },
+    agent: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Agent"
+    },
+    issueDate: {
+        type: Date,
+        required: true,
+    },
+    expiryDate: {
+        type: Date,
+    },
+
+    // Personal Details
+    fullName: {
         type: String,
+        required: true,
+    },
+    dateOfBirth: {
+        type: Date,
+        required: true,
+    },
+    gender: {
+        type: String,
+        enum: ["Male", "Female", "Other"],
+        required: true,
+    },
+    maritalStatus: {
+        type: String,
+        enum: ["Single", "Married", "Divorced", "Widowed"],
+    },
+    phone: {
+        type: String,
+        required: true,
+    },
+    email: {
+        type: String,
+        required: true,
+        lowercase: true,
+    },
+    address: {
+        type: String,
+        required: true,
+    },
+
+    // Identification
+    aadharNumber: {
+        type: String,
+        required: true,
         unique: true,
+    },
+    panNumber: {
+        type: String,
+        required: true,
+        unique: true,
+    },
+    nominee: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Nominee",
+    },
+    // Financial Info
+    annualIncome: {
+        type: Number,
+        required: true,
+    },
+    occupation: {
+        type: String,
+        enum: ["Salaried", "Self-Employed", "Business", "Student", "Retired", "Other"],
         required: true,
     },
     coverage_amount: {
@@ -49,18 +107,8 @@ const PolicySchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ["not-active", "created", "active", "ongoing", "claimed", "cancelled"],
-        default: "not-active"
-    },
-    nominee: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Nominee",
-        default: null
-    },
-=======
         enum: ["created", "active", "ongoing", "claimed", "cancelled"],
     },  
->>>>>>> Stashed changes
     created_date: {
         type: Date,
         default: Date.now

@@ -4,6 +4,7 @@ import Agent from "../models/agent.model.js";
 import Company from "../models/company.model.js"
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { issueJWT } from "../utils/jwt.js";
+
 // Register User
 const registerUser = asyncHandler(async (req, res) => {
   try {
@@ -23,22 +24,22 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
     // Existing user, issue JWT with role
-    let roleData = null;
+    let userData = null;
 
     if (user.role === "customer") {
-      roleData = await Customer.findOne({ userId: user._id });
+      userData = await Customer.findOne({ user: user._id }); 
     } else if (user.role === "agent") {
-      roleData = await Agent.findOne({ userId: user._id });
+      userData = await Agent.findOne({ user: user._id });
     } else if (user.role === "company") {
-      roleData = await Company.findOne({ userId: user._id });
+      userData = await Company.findOne({ user: user._id });
     }
-    
+    console.log("userData",userData);
     const token = issueJWT(user);
-    res.json({
+    res.status(200).json({
       newUser: false,
+      role:user.role,
       token,
-      role: user.role,
-      data: roleData || null,
+      userData,
     });
   } catch (error) {
     console.error("Error in registerUser:", error);
@@ -65,10 +66,10 @@ const assignRole = asyncHandler(async (req, res) => {
     return res.json({ message: `User already registred as a ${user.role}`, role: user.role });
   }
 
-  let roleDoc;
+  let userData;
   switch (role) {
     case "customer":
-      roleDoc = await Customer.create({
+      userData = await Customer.create({
         user: user._id,
         customer_did: did,
         wallet_address: user.wallet_address,
@@ -79,7 +80,7 @@ const assignRole = asyncHandler(async (req, res) => {
       break;
 
     case "agent":
-      roleDoc = await Agent.create({
+      userData = await Agent.create({
         user: user._id,
         agent_did: did,
         wallet_address: user.wallet_address,
@@ -90,7 +91,7 @@ const assignRole = asyncHandler(async (req, res) => {
       break;
 
     case "company":
-      roleDoc = await Company.create({
+      userData = await Company.create({
         user: user._id,
         company_name: name,
         company_did: did,
@@ -118,9 +119,8 @@ const assignRole = asyncHandler(async (req, res) => {
 
   return res.status(200).json({
     message: "Role assigned",
-    user,
-    roleDoc,
     token,
+    userData,
   });
 });
 

@@ -4,7 +4,7 @@ import { getCustomer, updateCustomer } from "../controllers/customer.controller.
 const router = express.Router();
 
 router.post("/get", getCustomer);         // Get customer by wallet_address
-router.put("/update", updateCustomer);   // Update customer by wallet_address// routes/userRoutes.js
+router.patch("/update", updateCustomer);   // Update customer by wallet_address// routes/userRoutes.js
 
 // // Customer sends policy request to agent
 // router.post("/send-policy-request", sendPolicyRequest);
