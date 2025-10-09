@@ -1,6 +1,4 @@
-<<<<<<< Updated upstream
-=======
-import { asyncHandler } from "../utils/asyncHandler.js";
+import {asyncHandler} from "../utils/asyncHandler.js";
 import Agent from "../models/agent.model.js";
 import Company from "../models/company.model.js";
 import User from "../models/user.model.js";
@@ -8,14 +6,14 @@ import User from "../models/user.model.js";
 // Use this middleware to verify company access
 const verifyCompanyAccess = async (wallet_address) => {
 
-  const company = await Company.findOne({
-    wallet_address: wallet_address.toLowerCase()
+  const company = await Company.findOne({ 
+    wallet_address: wallet_address.toLowerCase() 
   });
-
+  
   if (!company) {
-    return {
-      valid: false,
-      message: "Unauthorized: Company access required"
+    return { 
+      valid: false, 
+      message: "Unauthorized: Company access required" 
     };
   }
   return { valid: true, company };
@@ -35,9 +33,9 @@ const getPendingAgents = asyncHandler(async (req, res) => {
   // Verify company access
   const { valid, message } = await verifyCompanyAccess(company_wallet_address);
   if (!valid) {
-    return res.status(403).json({
-      success: false,
-      message
+    return res.status(403).json({ 
+      success: false, 
+      message 
     });
   }
 
@@ -109,11 +107,11 @@ const getAllAgents = asyncHandler(async (req, res) => {
   const categorized = {
     pending_kyc: allAgents.filter(a => a.kyc_status === "pending"),
 
-    pending_approval: allAgents.filter(a =>
+    pending_approval: allAgents.filter(a => 
       a.kyc_status === "verified" && !a.is_approved
     ),
 
-    approved: allAgents.filter(a =>
+    approved: allAgents.filter(a => 
       a.kyc_status === "verified" && a.is_approved
     )
   };
@@ -150,8 +148,8 @@ const approveAgent = asyncHandler(async (req, res) => {
   }
 
   // Find the agent
-  const agent = await Agent.findOne({
-    wallet_address: agent_wallet_address.toLowerCase()
+  const agent = await Agent.findOne({ 
+    wallet_address: agent_wallet_address.toLowerCase() 
   });
 
   if (!agent) {
@@ -212,8 +210,8 @@ const rejectAgent = asyncHandler(async (req, res) => {
   }
 
   // Find the agent
-  const agent = await Agent.findOne({
-    wallet_address: agent_wallet_address.toLowerCase()
+  const agent = await Agent.findOne({ 
+    wallet_address: agent_wallet_address.toLowerCase() 
   });
 
   if (!agent) {
@@ -243,4 +241,3 @@ export {
   approveAgent,
   rejectAgent
 };
->>>>>>> Stashed changes

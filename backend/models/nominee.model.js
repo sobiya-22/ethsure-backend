@@ -10,7 +10,7 @@ const NomineeSchema = new mongoose.Schema(
     nominee_age: {
       type: Number,
       required: true,
-      min: 18
+      min: 0
     },
     nominee_email: {
       type: String,
@@ -23,11 +23,6 @@ const NomineeSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Customer",
       required: true
-    },
-    nominee_relation: {
-      type: String,
-      required: true,
-      trim:true,
     },
     policy: {
       type: mongoose.Schema.Types.ObjectId,

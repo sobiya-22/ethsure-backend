@@ -27,8 +27,8 @@ const addNominee = asyncHandler(async (req, res) => {
   });
 
   // Update customer and policy references
-  // customer.nominees.push(nominee._id);
-  // await customer.save();
+  customer.nominees.push(nominee._id);
+  await customer.save();
 
   policy.nominee = nominee._id;
   await policy.save();

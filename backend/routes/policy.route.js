@@ -1,29 +1,18 @@
 import express from "express";
 import {
-<<<<<<< Updated upstream
-    createPolicy,
+    //createPolicy,
     getPolicy,
     updatePolicy,
-    deactivatePolicy
-=======
-  createPolicy,
-  getPolicies,
-  getPolicyById,
-  updatePolicyStatus,
->>>>>>> Stashed changes
+    deactivatePolicy,
+    requestPolicy
 } from "../controllers/policy.controller.js";
 
 const router = express.Router();
 
-router.post("/create", createPolicy);
-<<<<<<< Updated upstream
+//router.post("/create", createPolicy);
 router.get("/get", getPolicy);
 router.put("/update", updatePolicy);
 router.put("/deactivate", deactivatePolicy);
-=======
-router.get("/all-policies", getPolicies);
-router.get("/:id", getPolicyById);
-router.patch("/:id/status", updatePolicyStatus);
->>>>>>> Stashed changes
+router.post("/request", requestPolicy);
 
 export default router;
