@@ -5,6 +5,11 @@ import connectDB from "./utils/connectDB.js";
 import dotenv from "dotenv";
 import userRoutes from './routes/user.route.js'
 import companyRoutes from "./routes/company.route.js";
+import kycRoutes from "./routes/kyc.route.js"
+import agentRoutes from "./routes/agent.route.js"
+import customerRoutes from "./routes/customer.route.js"
+import nomineeRoutes from "./routes/nominee.route.js"
+import policyRoutes from "./routes/policy.route.js"
 import fs from "fs";
 import cors from "cors";
 dotenv.config();
@@ -19,12 +24,12 @@ app.use(cors({
   credentials: true,
 }));
 app.use("/api/users", userRoutes);
-// app.use("/api/company", companyRoutes);
-// app.use("/api/kyc" , kycRoutes );
-// app.use("/api/agent" , agentRoutes);
-// app.use("/api/customer" , customerRoutes);
-// app.use("/api/nominee", nomineeRoutes);
-// app.use("/api/policy" , policyRoutes);
+app.use("/api/company", companyRoutes);
+app.use("/api/kyc" , kycRoutes );
+app.use("/api/agent" , agentRoutes);
+app.use("/api/customer" , customerRoutes);
+app.use("/api/nominee", nomineeRoutes);
+app.use("/api/policy" , policyRoutes);
 
 app.get("/.well-known/jwks.json", (req, res) => {
   const jwks = fs.readFileSync("jwks.json", "utf8");

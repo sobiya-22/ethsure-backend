@@ -1,18 +1,18 @@
 import express from "express";
-import {
-    //createPolicy,
-    getPolicy,
-    updatePolicy,
-    deactivatePolicy,
-    requestPolicy
-} from "../controllers/policy.controller.js";
+import { createPolicy, getPolicies, getPolicyById, updatePolicyStatus } from "../controllers/policy.controller.js";
 
 const router = express.Router();
 
-//router.post("/create", createPolicy);
-router.get("/get", getPolicy);
-router.put("/update", updatePolicy);
-router.put("/deactivate", deactivatePolicy);
-router.post("/request", requestPolicy);
+// Create policy
+router.post("/create", createPolicy);
+
+// Get policies with filters (customer_wallet, agent_wallet, status)
+router.get("/all-policies", getPolicies);
+
+// Get single policy by ID
+router.get("/:id", getPolicyById);
+
+// Update policy status
+router.put("/update-status/:id", updatePolicyStatus);
 
 export default router;

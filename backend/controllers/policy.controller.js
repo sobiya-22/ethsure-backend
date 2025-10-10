@@ -25,13 +25,9 @@ const createPolicy = asyncHandler(async (req, res) => {
     premium_amount,
     premium_frequency,
     policy_duration,
-    nominee_name,
-    nominee_age,
-    nominee_relation,
-    nominee_email,
   } = req.body;
 
-  //Validate customer and agent existence
+  // Validate customer and agent existence
   const customer = await Customer.findById(customerId);
   if (!customer)
     return res.status(404).json({ success: false, message: "Customer not found" });
@@ -40,7 +36,7 @@ const createPolicy = asyncHandler(async (req, res) => {
   if (!agent)
     return res.status(404).json({ success: false, message: "Agent not found" });
 
-  //Create the policy (initially with status = created)
+  // Create the policy (initially with status = created)
   const newPolicy = await Policy.create({
     customer: customerId,
     agent: agentId,
@@ -64,54 +60,76 @@ const createPolicy = asyncHandler(async (req, res) => {
     status: "created",
   });
 
-  //Create nominee and link to the policy and customer
-  const nominee = await Nominee.create({
-    nominee_name,
-    nominee_age,
-    nominee_email,
-    nominee_relation,
-    customer: customerId,
-    policy: newPolicy._id,
-  });
-
-  //Update the policy with nominee reference
-  newPolicy.nominee = nominee._id;
-  await newPolicy.save();
-
-  return res.status(201).json({
+  res.status(201).json({
     success: true,
-    message: "Policy and nominee created successfully (status: created)",
+    message: "Policy created successfully (status: created)",
     policy: newPolicy,
-    nominee,
   });
 });
 
 
+// //get all policies
+// // GET /api/policy/all-policies?customerId=671208c364e31d00239c21b0
+// // GET /api/policy/all-policies?agentId=671209d564e31d00239c21c3
+// // GET /api/policy/all-policies?status=active
+const getPolicies = asyncHandler(async (req, res) => {
+  const { customer_wallet, agent_wallet, status } = req.query;
 
-//get all policies
-// GET /api/policy/all-policies?customerId=671208c364e31d00239c21b0
-// GET /api/policy/all-policies?agentId=671209d564e31d00239c21c3
-// GET /api/policy/all-policies?status=active
-export const getPolicies = asyncHandler(async (req, res) => {
-    const { customerId, agentId, status } = req.query;
-    //above these customerId, agentId these ids are mongodb id
-    const filter = {};
-    if (customerId) filter.customer = customerId;
-    if (agentId) filter.agent = agentId;
-    if (status) filter.status = status;
+  // Build dynamic filter
+  const filter = {};
 
-    const policies = await Policy.find(filter)
-        .populate("customer", "customer_name customer_email wallet_address")
-        .populate("agent", "agent_name agent_email wallet_address")
-        .populate("nominee", "nominee_name nominee_relation");
+  // Filter by customer wallet
+  if (customer_wallet) {
+    const customer = await Customer.findOne({
+      wallet_address: customer_wallet.toLowerCase(),
+    });
+    if (!customer)
+      return res.status(404).json({
+        success: false,
+        message: "Customer not found with this wallet address.",
+      });
+    filter.customer = customer._id;
+  }
 
-    res.status(200).json({ success: true, policies });
+  // Filter by agent wallet
+  if (agent_wallet) {
+    const agent = await Agent.findOne({
+      wallet_address: agent_wallet.toLowerCase(),
+    });
+    if (!agent)
+      return res.status(404).json({
+        success: false,
+        message: "Agent not found with this wallet address.",
+      });
+    filter.agent = agent._id;
+  }
+
+  // Filter by status
+  if (status) filter.status = status;
+
+  const policies = await Policy.find(filter)
+    .populate("customer", "customer_name customer_email wallet_address")
+    .populate("agent", "agent_name agent_email wallet_address")
+    .populate("nominee", "nominee_name nominee_relation nominee_email");
+
+  if (!policies.length) {
+    return res.status(404).json({
+      success: false,
+      message: "No policies found for the given filters.",
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    total: policies.length,
+    policies,
+  });
 });
 
 
 //get only one specific policy by ID
 // http://localhost:5000/api/policy/${id}
-export const getPolicyById = asyncHandler(async (req, res) => {
+const getPolicyById = asyncHandler(async (req, res) => {
     const { id } = req.params;
 
     const policy = await Policy.findById(id)
@@ -129,46 +147,85 @@ export const getPolicyById = asyncHandler(async (req, res) => {
 // agnet call updates from created to ongoing
 // company from ongoing to active 
 // any entity can change its status to newStatus passed 
-export const updatePolicyStatus = asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    const { newStatus } = req.body;
+const updatePolicyStatus = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { newStatus, wallet_address, role } = req.body;
 
-    const validTransitions = {
-        created: ["ongoing", "cancelled"],
-        ongoing: ["active", "cancelled"],
-        active: ["claimed", "cancelled"],
-    };
+  // Fetch policy and populate wallet addresses
+  const policy = await Policy.findById(id)
+    .populate("customer", "wallet_address")
+    .populate("agent", "wallet_address");
 
-    const policy = await Policy.findById(id);
-    if (!policy)
-        return res.status(404).json({ success: false, message: "Policy not found" });
+    console.log("Agent in policy:", policy.agent);
+    console.log("Wallet from request:", wallet_address);
 
-    const currentStatus = policy.status;
 
-    // Validate transition
-    if (
-        !validTransitions[currentStatus] ||
-        !validTransitions[currentStatus].includes(newStatus)
-    ) {
-        return res.status(400).json({
-            success: false,
-            message: `Invalid status transition from '${currentStatus}' to '${newStatus}'`,
-        });
-    }
+  if (!policy) {
+    return res.status(404).json({ success: false, message: "Policy not found" });
+  }
 
-    policy.status = newStatus;
-    await policy.save();
+  const currentStatus = policy.status;
 
-    res.status(200).json({
-        success: true,
-        message: `Policy status updated to '${newStatus}'`,
-        policy,
+  // Define valid transitions per role
+  const transitions = {
+    customer: { from: null, to: ["created"] }, // Customer creates policy
+    agent: { from: "created", to: ["ongoing", "cancelled"] },
+    company: { from: "ongoing", to: ["active", "cancelled"] },
+  };
+
+  // Validate role
+  if (!["customer", "agent", "company"].includes(role)) {
+    return res.status(400).json({ success: false, message: "Invalid role" });
+  }
+
+  // Validate transition logic
+  const validFrom = transitions[role].from;
+  const validTo = transitions[role].to;
+
+  if (validFrom && currentStatus !== validFrom) {
+    return res.status(400).json({
+      success: false,
+      message: `Role '${role}' cannot update policy from '${currentStatus}'`,
     });
+  }
+
+  if (!validTo.includes(newStatus)) {
+    return res.status(400).json({
+      success: false,
+      message: `Invalid status '${newStatus}' for role '${role}'`,
+    });
+  }
+
+  // ✅ Validate wallet ownership (safe null-checks)
+  if (
+    role === "agent" &&
+    (!policy.agent || policy.agent.wallet_address !== wallet_address)
+  ) {
+    return res.status(403).json({ success: false, message: "Unauthorized agent" });
+  }
+
+  if (
+    role === "customer" &&
+    (!policy.customer || policy.customer.wallet_address !== wallet_address)
+  ) {
+    return res.status(403).json({ success: false, message: "Unauthorized customer" });
+  }
+
+  // ✅ Update status
+  policy.status = newStatus;
+  await policy.save();
+
+  return res.status(200).json({
+    success: true,
+    message: `Policy status updated to '${newStatus}' by ${role}`,
+    policy,
+  });
 });
 
 
 
-// Deactivate the  policy
+
+// //Deactivate the  policy
 // const deactivatePolicy = asyncHandler(async (req, res) => {
 //     const policy = await Policy.findOneAndUpdate(
 //         {},
@@ -190,7 +247,8 @@ export const updatePolicyStatus = asyncHandler(async (req, res) => {
 //     });
 // });
 
-// Customer requests a policy with a specific agent
+
+// //Customer requests a policy with a specific agent
 // const requestPolicy = asyncHandler(async (req, res) => {
 //     const { customer_wallet_address, agent_wallet_address } = req.body;
 
@@ -226,7 +284,7 @@ export const updatePolicyStatus = asyncHandler(async (req, res) => {
 
 
 export {
-    //createPolicy,
+    createPolicy,
     getPolicies,
     getPolicyById,
     updatePolicyStatus
