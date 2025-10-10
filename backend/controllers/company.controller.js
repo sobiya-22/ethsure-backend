@@ -19,169 +19,68 @@ const verifyCompanyAccess = async (wallet_address) => {
   return { valid: true, company };
 };
 
-//Get list of agents waiting for approval (KYC verified but not approved)
-const getPendingAgents = asyncHandler(async (req, res) => {
-  const { company_wallet_address } = req.body;
+//Get list of agents 
+const getAgents = asyncHandler(async (req, res) => {
+  const { company_wallet_address, status } = req.body; 
+  // status = "pending_kyc", "pending_approval", "approved" or undefined for all
 
   if (!company_wallet_address) {
-    return res.status(400).json({
-      success: false,
-      message: "Company wallet address is required"
-    });
+    return res.status(400).json({ success: false, message: "Company wallet address is required" });
   }
 
-  // Verify company access
   const { valid, message } = await verifyCompanyAccess(company_wallet_address);
-  if (!valid) {
-    return res.status(403).json({ 
-      success: false, 
-      message 
-    });
-  }
+  if (!valid) return res.status(403).json({ success: false, message });
 
-  // Find agents with verified KYC but not approved yet
-  const pendingAgents = await Agent.find({
-    kyc_status: "verified",
-    is_approved: false
-  }).populate("user", "email");
-
-  res.status(200).json({
-    success: true,
-    count: pendingAgents.length,
-    data: pendingAgents
-  });
-});
-
-//Get list of approved agents
-const getApprovedAgents = asyncHandler(async (req, res) => {
-
-  const { company_wallet_address } = req.body;
-
-  if (!company_wallet_address) {
-    return res.status(400).json({
-      success: false,
-      message: "Company wallet address is required"
-    });
-  }
-
-  // Verify company access
-  const { valid, message } = await verifyCompanyAccess(company_wallet_address);
-  if (!valid) {
-    return res.status(403).json({ success: false, message });
-  }
-
-  // Find approved agents
-  const approvedAgents = await Agent.find({
-    kyc_status: "verified",
-    is_approved: true
-  }).populate("user", "email");
-
-  res.status(200).json({
-    success: true,
-    count: approvedAgents.length,
-    data: approvedAgents
-  });
-});
-
-//Get all agents with their verification status
-const getAllAgents = asyncHandler(async (req, res) => {
-  const { company_wallet_address } = req.body;
-
-  if (!company_wallet_address) {
-    return res.status(400).json({
-      success: false,
-      message: "Company wallet address is required"
-    });
-  }
-  // Verify company access
-  const { valid, message } = await verifyCompanyAccess(company_wallet_address);
-  if (!valid) {
-    return res.status(403).json({ success: false, message });
-  }
   // Get all agents
-  const allAgents = await Agent.find({})
-    .populate("user", "email")
-    .lean();
+  let agents = await Agent.find({}).populate("user", "email").lean();
 
-  // Categorize agents
+  // Categorize
   const categorized = {
-    pending_kyc: allAgents.filter(a => a.kyc_status === "pending"),
-
-    pending_approval: allAgents.filter(a => 
-      a.kyc_status === "verified" && !a.is_approved
-    ),
-
-    approved: allAgents.filter(a => 
-      a.kyc_status === "verified" && a.is_approved
-    )
+    pending_kyc: agents.filter(a => a.kyc_status === "pending"),
+    pending_approval: agents.filter(a => a.kyc_status === "verified" && !a.is_approved),
+    approved: agents.filter(a => a.kyc_status === "verified" && a.is_approved)
   };
 
+  if (status && !["pending_kyc", "pending_approval", "approved"].includes(status)) {
+    return res.status(400).json({ success: false, message: "Invalid status filter" });
+  }
+
+  const result = status ? categorized[status] : categorized;
+
   res.status(200).json({
     success: true,
-    total: allAgents.length,
-    counts: {
-      pending_kyc: categorized.pending_kyc.length,
-      pending_approval: categorized.pending_approval.length,
-      approved: categorized.approved.length
-    },
-    data: categorized
+    total: Array.isArray(result) ? result.length : agents.length,
+    data: result
   });
 });
 
-// Approve an agent after KYC verification
-const approveAgent = asyncHandler(async (req, res) => {
+//approval or rejection 
+const updateAgentApproval = asyncHandler(async (req, res) => {
+  const { company_wallet_address, agent_wallet_address, approve } = req.body;
+  // approve = true → approve, false → reject
 
-  const { company_wallet_address, agent_wallet_address } = req.body;
-
-  // Validate required fields
-  if (!company_wallet_address || !agent_wallet_address) {
+  if (!company_wallet_address || !agent_wallet_address || approve === undefined) {
     return res.status(400).json({
       success: false,
-      message: "Company wallet address and agent wallet address are required"
+      message: "Company wallet, agent wallet, and approve flag are required"
     });
   }
 
-  // Verify company access
   const { valid, message } = await verifyCompanyAccess(company_wallet_address);
-  if (!valid) {
-    return res.status(403).json({ success: false, message });
-  }
+  if (!valid) return res.status(403).json({ success: false, message });
 
-  // Find the agent
-  const agent = await Agent.findOne({ 
-    wallet_address: agent_wallet_address.toLowerCase() 
-  });
+  const agent = await Agent.findOne({ wallet_address: agent_wallet_address.toLowerCase() });
+  if (!agent) return res.status(404).json({ success: false, message: "Agent not found" });
 
-  if (!agent) {
-    return res.status(404).json({
-      success: false,
-      message: "Agent not found"
-    });
-  }
+  if (agent.kyc_status !== "verified" && approve)
+    return res.status(400).json({ success: false, message: "Agent KYC must be verified before approval" });
 
-  // Check if agent's KYC is verified
-  if (agent.kyc_status !== "verified") {
-    return res.status(400).json({
-      success: false,
-      message: "Agent KYC must be verified before approval"
-    });
-  }
-
-  // Check if agent is already approved
-  if (agent.is_approved) {
-    return res.status(400).json({
-      success: false,
-      message: "Agent is already approved"
-    });
-  }
-
-  // Approve the agent
-  agent.is_approved = true;
+  agent.is_approved = !!approve; // true → approve, false → reject
   await agent.save();
 
   res.status(200).json({
     success: true,
-    message: "Agent approved successfully",
+    message: `Agent has been ${approve ? "approved" : "rejected"}`,
     data: {
       agent_wallet_address: agent.wallet_address,
       agent_name: agent.agent_name,
@@ -191,53 +90,8 @@ const approveAgent = asyncHandler(async (req, res) => {
   });
 });
 
-//Reject an agent's approval request
-const rejectAgent = asyncHandler(async (req, res) => {
-  const { company_wallet_address, agent_wallet_address, reason } = req.body;
-
-  // Validate required fields
-  if (!company_wallet_address || !agent_wallet_address) {
-    return res.status(400).json({
-      success: false,
-      message: "Company wallet address and agent wallet address are required"
-    });
-  }
-
-  // Verify company access
-  const { valid, message } = await verifyCompanyAccess(company_wallet_address);
-  if (!valid) {
-    return res.status(403).json({ success: false, message });
-  }
-
-  // Find the agent
-  const agent = await Agent.findOne({ 
-    wallet_address: agent_wallet_address.toLowerCase() 
-  });
-
-  if (!agent) {
-    return res.status(404).json({
-      success: false,
-      message: "Agent not found"
-    });
-  }
-  agent.is_approved = false;
-  await agent.save();
-
-  res.status(200).json({
-    success: true,
-    message: "Agent approval rejected",
-    data: {
-      agent_wallet_address: agent.wallet_address,
-      agent_name: agent.agent_name,
-      is_approved: agent.is_approved
-    }
-  });
-});
-
 export {
-  getPendingAgents,
-  getApprovedAgents,
-  getAllAgents,
-  approveAgent,
-  rejectAgent
+  verifyCompanyAccess ,
+  getAgents ,    
+  updateAgentApproval
 };
