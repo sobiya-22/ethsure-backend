@@ -3,7 +3,7 @@ import Customer from "../models/customer.model.js";
 import Policy from "../models/policy.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-// Add Nominee 
+// Add Nominee (simplified)
 const addNominee = asyncHandler(async (req, res) => {
   const { nominee_name, nominee_age, nominee_email, customer_id, policy_id } = req.body;
 
@@ -14,25 +14,21 @@ const addNominee = asyncHandler(async (req, res) => {
     });
   }
 
+  // Validate existence of Customer and Policy
   const customer = await Customer.findById(customer_id);
   const policy = await Policy.findById(policy_id);
 
   if (!customer) return res.status(404).json({ success: false, message: "Customer not found" });
   if (!policy) return res.status(404).json({ success: false, message: "Policy not found" });
 
+  // Create Nominee
   const nominee = await Nominee.create({
     nominee_name,
     nominee_age,
     nominee_email,
     customer: customer._id,
-    policy: policy._id,
+    policy: policy._id
   });
-
-  customer.nominees.push(nominee._id);
-  await customer.save();
-
-  policy.nominee = nominee._id;
-  await policy.save();
 
   res.status(201).json({
     success: true,
@@ -41,7 +37,7 @@ const addNominee = asyncHandler(async (req, res) => {
   });
 });
 
-// Get Nominees 
+// Get Nominees
 const getNominees = asyncHandler(async (req, res) => {
   const { customer_id, policy_id } = req.query;
 
@@ -67,7 +63,7 @@ const getNominees = asyncHandler(async (req, res) => {
   });
 });
 
-// Update Nominee 
+// Update Nominee
 const updateNominee = asyncHandler(async (req, res) => {
   const { nominee_id, updateData } = req.body;
 
