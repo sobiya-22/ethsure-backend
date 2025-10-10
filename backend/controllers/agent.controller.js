@@ -22,6 +22,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import Agent from "../models/agent.model.js"; 
 import Policy from "../models/policy.model.js"
+import Company from "../models/company.model.js";
 
 
 const getAgent = asyncHandler(async (req, res) => {
@@ -169,5 +170,70 @@ const getAllAgentPolicies = asyncHandler(async (req, res) => {
   });
 });
 
+const sendAssociationRequest = asyncHandler(async (req, res) => {
+  const { agent_wallet_address } = req.body;
 
-export {getAgent , updateAgent, getAllAgentPolicies , getPolicyRequests }
+  if (!agent_wallet_address) {
+    return res.status(400).json({
+      success: false,
+      message: "Agent wallet address is required",
+    });
+  }
+
+  const agent = await Agent.findOne({ wallet_address: agent_wallet_address.toLowerCase() });
+
+  if (!agent) return res.status(404).json({ 
+    success: false, 
+    message: "Agent not found" 
+  });
+
+  if (agent.kyc_status !== "verified") {
+    return res.status(400).json({
+      success: false,
+      message: "KYC must be verified before sending an association request",
+    });
+  }
+
+  //Fetch company
+  const company = await Company.findOne();
+  if (!company) {
+    return res.status(404).json({
+      success: false,
+      message: "Nocompany found in the system",
+    });
+  }
+
+  //Check if already sent
+  const existingRequest = agent.association_requests.find(
+    (req) => req.associated_company?.toString() === company._id.toString()
+  );
+
+  if (existingRequest) {
+    return res.status(400).json({
+      success: false,
+      message: `Association request already ${existingRequest.status} for this company.`,
+    });
+  }
+
+  //Add new association request
+  agent.association_requests.push({
+    associated_company: company._id,
+    status: "pending",
+    request_date: new Date(),
+  });
+
+  await agent.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Association request sent to company successfully.",
+    data: {
+      agent_wallet_address: agent.wallet_address,
+      company_wallet_address: company.wallet_address,
+      status: "pending",
+    },
+  });
+});
+
+
+export {getAgent , updateAgent, getAllAgentPolicies , getPolicyRequests , sendAssociationRequest }
