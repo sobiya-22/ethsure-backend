@@ -73,7 +73,7 @@ const AgentSchema = new mongoose.Schema(
         status: {
           type: String,
           enum: ["pending", "approved", "rejected"],
-          default : ["pending"]
+          default: "pending"
         },
         request_date: { type: Date, default: Date.now },
         response_date: { type: Date }
