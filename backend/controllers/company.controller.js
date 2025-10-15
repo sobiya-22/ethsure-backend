@@ -19,6 +19,39 @@ const verifyCompanyAccess = async (wallet_address) => {
   return { valid: true, company };
 };
 
+const getCompany = asyncHandler(async (req, res) => {
+  const { wallet_address } = req.body;
+
+  // If no wallet_address provided, get the first (and only) company
+  if (!wallet_address) {
+    const company = await Company.findOne({}).populate("user", "email").lean();
+    
+    if (!company) {
+      return res.status(404).json({ success: false, message: "No company found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: [company]  // Return as array to match frontend expectations
+    });
+  }
+
+  // Original logic for specific wallet address
+  const company = await Company.findOne({ 
+    wallet_address: wallet_address.toLowerCase() 
+  }).populate("user", "email").lean();
+
+  if (!company) {
+    return res.status(404).json({ success: false, message: "Company not found" });
+  }
+
+  res.status(200).json({
+    success: true,
+    data: company
+  });
+});
+
+
 //Get list of agents 
 const getAgents = asyncHandler(async (req, res) => {
   const { company_wallet_address, status } = req.body; 
@@ -92,6 +125,7 @@ const updateAgentApproval = asyncHandler(async (req, res) => {
 
 export {
   verifyCompanyAccess ,
+  getCompany,
   getAgents ,    
   updateAgentApproval
 };

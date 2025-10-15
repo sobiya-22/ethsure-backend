@@ -169,5 +169,43 @@ const getAllAgentPolicies = asyncHandler(async (req, res) => {
   });
 });
 
+const getApprovedAgents = asyncHandler(async (req, res) => {
+  try {
+    // Get all agents where is_approved is true
+    const approvedAgents = await Agent.find({ 
+      is_approved: true,
+      kyc_status: "verified" 
+    }).populate("user", "email").lean();
 
-export {getAgent , updateAgent, getAllAgentPolicies , getPolicyRequests }
+    console.log("🔍 Found approved agents:", approvedAgents.length);
+
+    // Format the response for frontend
+    const formattedAgents = approvedAgents.map(agent => ({
+      _id: agent._id, // Add the MongoDB ObjectId
+      agent_name: agent.agent_name,
+      agent_email: agent.agent_email || agent.user?.email,
+      wallet_address: agent.wallet_address,
+      is_approved: agent.is_approved,
+      kyc_status: agent.kyc_status,
+      profile_photo_url: agent.profile_photo_url,
+      agent_did: agent.agent_did
+    }));
+
+    res.status(200).json({
+      success: true,
+      total: formattedAgents.length,
+      data: formattedAgents
+    });
+
+  } catch (error) {
+    console.error("Error fetching approved agents:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching approved agents",
+      error: error.message
+    });
+  }
+});
+
+
+export {getAgent , updateAgent, getAllAgentPolicies , getPolicyRequests, getApprovedAgents }

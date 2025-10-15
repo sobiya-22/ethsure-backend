@@ -9,11 +9,11 @@
 // export default router;
 
 import express from "express" ;
-import { getAgents , updateAgentApproval } from "../controllers/company.controller.js";
+import { getCompany, getAgents , updateAgentApproval } from "../controllers/company.controller.js";
 
 
 const router = express.Router();
-
+router.post("/get",getCompany);
 router.post("/agents", getAgents);
 router.patch("/agent-approval", updateAgentApproval);
 

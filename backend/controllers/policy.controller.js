@@ -3,11 +3,12 @@ import Policy from "../models/policy.model.js";
 import Customer from "../models/customer.model.js"
 import Agent from "../models/agent.model.js"
 
-
 const createPolicy = asyncHandler(async (req, res) => {
   const {
     customerId,
     agentId,
+    customer_wallet,
+    agent_wallet,
     issueDate,
     expiryDate,
     fullName,
@@ -27,19 +28,45 @@ const createPolicy = asyncHandler(async (req, res) => {
     policy_duration,
   } = req.body;
 
-  // Validate customer and agent existence
-  const customer = await Customer.findById(customerId);
+  // Find customer by ID or wallet address
+  let customer;
+  if (customerId) {
+    customer = await Customer.findById(customerId);
+  } else if (customer_wallet) {
+    customer = await Customer.findOne({ wallet_address: customer_wallet.toLowerCase() });
+  } else {
+    return res.status(400).json({ success: false, message: "Customer ID or wallet address is required" });
+  }
+  
   if (!customer)
     return res.status(404).json({ success: false, message: "Customer not found" });
 
-  const agent = await Agent.findById(agentId);
+  // Find agent by ID or wallet address
+  let agent;
+  if (agentId) {
+    agent = await Agent.findById(agentId);
+  } else if (agent_wallet) {
+    agent = await Agent.findOne({ wallet_address: agent_wallet.toLowerCase() });
+  } else {
+    return res.status(400).json({ success: false, message: "Agent ID or wallet address is required" });
+  }
+  
   if (!agent)
     return res.status(404).json({ success: false, message: "Agent not found" });
 
-  // Create the policy (initially with status = created)
-  const newPolicy = await Policy.create({
-    customer: customerId,
-    agent: agentId,
+  // Generate unique policy ID to avoid duplicate key error
+  const timestamp = Date.now();
+  const randomStr = Math.random().toString(36).substr(2, 9);
+  const randomNum = Math.floor(Math.random() * 10000);
+  const policyId = `POL_${timestamp}_${randomStr}_${randomNum}`;
+
+// Try to find existing policy with null policy_id and update it, or create new one
+const existingPolicy = await Policy.findOne({ policy_id: null });
+if (existingPolicy) {
+  // Update existing policy
+  Object.assign(existingPolicy, {
+    customer: customer._id,
+    agent: agent._id,
     issueDate,
     expiryDate,
     fullName,
@@ -59,6 +86,33 @@ const createPolicy = asyncHandler(async (req, res) => {
     policy_duration,
     status: "created",
   });
+  await existingPolicy.save();
+  var newPolicy = existingPolicy;
+} else {
+  // Create new policy without policy_id
+  var newPolicy = await Policy.create({
+    customer: customer._id,
+    agent: agent._id,
+    issueDate,
+    expiryDate,
+    fullName,
+    dateOfBirth,
+    gender,
+    maritalStatus,
+    phone,
+    email,
+    address,
+    aadharNumber,
+    panNumber,
+    annualIncome,
+    occupation,
+    coverage_amount,
+    premium_amount,
+    premium_frequency,
+    policy_duration,
+    status: "created",
+  });
+}
 
   res.status(201).json({
     success: true,
@@ -66,7 +120,6 @@ const createPolicy = asyncHandler(async (req, res) => {
     policy: newPolicy,
   });
 });
-
 
 // //get all policies
 // // GET /api/policy/all-policies?customerId=671208c364e31d00239c21b0
@@ -126,7 +179,6 @@ const getPolicies = asyncHandler(async (req, res) => {
   });
 });
 
-
 //get only one specific policy by ID
 // http://localhost:5000/api/policy/${id}
 const getPolicyById = asyncHandler(async (req, res) => {
@@ -158,7 +210,6 @@ const updatePolicyStatus = asyncHandler(async (req, res) => {
 
     console.log("Agent in policy:", policy.agent);
     console.log("Wallet from request:", wallet_address);
-
 
   if (!policy) {
     return res.status(404).json({ success: false, message: "Policy not found" });
@@ -196,7 +247,7 @@ const updatePolicyStatus = asyncHandler(async (req, res) => {
     });
   }
 
-  // ✅ Validate wallet ownership (safe null-checks)
+  //  Validate wallet ownership (safe null-checks)
   if (
     role === "agent" &&
     (!policy.agent || policy.agent.wallet_address !== wallet_address)
@@ -221,67 +272,6 @@ const updatePolicyStatus = asyncHandler(async (req, res) => {
     policy,
   });
 });
-
-
-
-
-// //Deactivate the  policy
-// const deactivatePolicy = asyncHandler(async (req, res) => {
-//     const policy = await Policy.findOneAndUpdate(
-//         {},
-//         { is_active: false, status: "cancelled" },
-//         { new: true }
-//     );
-
-//     if (!policy) {
-//         return res.status(404).json({
-//             success: false,
-//             message: "No policy found to deactivate."
-//         });
-//     }
-
-//     res.status(200).json({
-//         success: true,
-//         message: "Policy deactivated successfully.",
-//         data: policy
-//     });
-// });
-
-
-// //Customer requests a policy with a specific agent
-// const requestPolicy = asyncHandler(async (req, res) => {
-//     const { customer_wallet_address, agent_wallet_address } = req.body;
-
-//     if (!customer_wallet_address || !agent_wallet_address) {
-//         return res.status(400).json({
-//             success: false,
-//             message: "Customer and agent wallet addresses are required."
-//         });
-//     }
-
-//     const customer = await Customer.findOne({ wallet_address: customer_wallet_address.toLowerCase() });
-//     if (!customer) return res.status(404).json({ success: false, message: "Customer not found" });
-
-//     const agent = await Agent.findOne({ wallet_address: agent_wallet_address.toLowerCase() });
-//     if (!agent) return res.status(404).json({ success: false, message: "Agent not found" });
-
-//     const policy = await Policy.findOne();
-//     if (!policy) return res.status(404).json({ success: false, message: "No policy found" });
-
-//     // Update policy to "created" with refs
-//     policy.customer = customer._id;
-//     policy.agent = agent._id;
-//     policy.status = "created";
-
-//     await policy.save();
-
-//     res.status(200).json({
-//         success: true,
-//         message: "Policy request sent successfully.",
-//         data: policy
-//     });
-// });
-
 
 export {
     createPolicy,
