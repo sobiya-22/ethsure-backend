@@ -1,31 +1,35 @@
-// import jwt from "jsonwebtoken";
-// import jwksClient from "jwks-rsa";
-// import fs from "fs";
+import jwt from 'jsonwebtoken'
+export const authenticate = (req , res , next) => {
+    const { token } = req.cookies;
+    if(!token){
+        return res.status(401).send({message : "Please login first" , success : false});
+    }
+    jwt.verify(token , process.env.JWT_SECRET , (err , decode)=> {
+        if(err){
+            return res.status(401).send({message : "Token not valid , Please Contact Admin" , success : false});
+        }
+        req.user = decode;
+        next()
+    })
+}
 
-// const privateKey = fs.readFileSync("private.pem", "utf8");
-// const client = jwksClient({
-//   jwksUri: `${process.env.BACKEND_URL}/.well-known/jwks.json`,
-// });
+//
 
-// function getKey(header, callback) {
-//   client.getSigningKey(header.kid, function (err, key) {
-//     const signingKey = key.getPublicKey();
-//     callback(null, signingKey);
-//   });
-// }
 
-import { verifyJWT } from "../utils/jwt.js";
 
-export const authMiddleware = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) return res.status(401).json({ error: "No token provided" });
 
-  const token = authHeader.split(" ")[1];
-  try {
-    const decoded = verifyJWT(token);
-    req.user = decoded; // { sub: ---, role }
-    next();
-  } catch (err) {
-    return res.status(403).json({ error: "Invalid token" });
-  }
-};
+// import { verifyJWT } from "../utils/jwt.js";
+
+// export const authMiddleware = (req, res, next) => {
+//   const authHeader = req.headers.authorization;
+//   if (!authHeader) return res.status(401).json({ error: "No token provided" });
+
+//   const token = authHeader.split(" ")[1];
+//   try {
+//     const decoded = verifyJWT(token);
+//     req.user = decoded; // { sub: ---, role }
+//     next();
+//   } catch (err) {
+//     return res.status(403).json({ error: "Invalid token" });
+//   }
+// };

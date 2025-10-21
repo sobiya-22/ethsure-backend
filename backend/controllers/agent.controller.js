@@ -234,6 +234,40 @@ const sendAssociationRequest = asyncHandler(async (req, res) => {
     },
   });
 });
+//Get list of agents 
+const getAllAgents = asyncHandler(async (req, res) => {
+  // const { company_wallet_address } = req.body; 
+  const { status } = req.query;
+  // status = "pending_kyc", "pending_approval", "approved" or undefined for all
 
+  // if (!company_wallet_address) {
+  //   return res.status(400).json({ success: false, message: "Company wallet address is required" });
+  // }
 
-export {getAgent , updateAgent, getAllAgentPolicies , getPolicyRequests , sendAssociationRequest }
+  // const { valid, message } = await verifyCompanyAccess(company_wallet_address);
+  // if (!valid) return res.status(403).json({ success: false, message });
+
+  // Get all agents
+  let agents = await Agent.find({}).populate("user", "email").lean();
+
+  // Categorize
+  const categorized = {
+    pending_kyc: agents.filter(a => a.kyc_status === "pending"),
+    pending_approval: agents.filter(a => a.kyc_status === "verified" && !a.is_approved),
+    approved: agents.filter(a => a.kyc_status === "verified" && a.is_approved)
+  };
+
+  if (status && !["pending_kyc", "pending_approval", "approved"].includes(status)) {
+    return res.status(400).json({ success: false, message: "Invalid status filter" });
+  }
+
+  const result = status ? categorized[status] : categorized;
+
+  res.status(200).json({
+    success: true,
+    total: Array.isArray(result) ? result.length : agents.length,
+    data: result
+  });
+});
+
+export {getAgent , updateAgent, getAllAgentPolicies , getPolicyRequests , sendAssociationRequest,getAllAgents }

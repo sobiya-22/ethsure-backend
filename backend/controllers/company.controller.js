@@ -21,15 +21,16 @@ const verifyCompanyAccess = async (wallet_address) => {
 
 //Get list of agents 
 const getAgents = asyncHandler(async (req, res) => {
-  const { company_wallet_address, status } = req.body; 
+  // const { company_wallet_address } = req.body; 
+  const { status } = req.query;
   // status = "pending_kyc", "pending_approval", "approved" or undefined for all
 
-  if (!company_wallet_address) {
-    return res.status(400).json({ success: false, message: "Company wallet address is required" });
-  }
+  // if (!company_wallet_address) {
+  //   return res.status(400).json({ success: false, message: "Company wallet address is required" });
+  // }
 
-  const { valid, message } = await verifyCompanyAccess(company_wallet_address);
-  if (!valid) return res.status(403).json({ success: false, message });
+  // const { valid, message } = await verifyCompanyAccess(company_wallet_address);
+  // if (!valid) return res.status(403).json({ success: false, message });
 
   // Get all agents
   let agents = await Agent.find({}).populate("user", "email").lean();

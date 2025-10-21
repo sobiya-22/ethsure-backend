@@ -1,4 +1,4 @@
-
+import User from "../models/user.model.js"
 import Agent from "../models/agent.model.js";
 import Customer from "../models/customer.model.js";
 import twilio from 'twilio';
@@ -7,7 +7,9 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const twilioPhone = process.env.TWILIO_PHONE_NUMBER;
-
+console.log("Twilio SID:", accountSid);
+console.log("Twilio Token:", authToken ? "Loaded ✅" : "Missing ❌");
+console.log("Twilio Phone:", twilioPhone);
 // Initialize Twilio client
 const twilioClient = twilio(accountSid, authToken);
 
@@ -25,38 +27,32 @@ const otpStore = new Map();
 //SEND OTP
 const sendKYCOTP = asyncHandler(async (req, res) => {
 
-  const { wallet_address, user_type, phone_number } = req.body;
-
-  if (!wallet_address || !user_type || !phone_number) {
-    return res.status(400).json({ 
-      success: false, 
-      message: "All fields required" 
+  const { wallet_address, role, phone_number } = req.body;
+  console.log(req.body);
+  if (!wallet_address || !role || !phone_number) {
+    return res.status(400).json({
+      success: false,
+      message: "All fields required"
     });
   }
 
-  if (!["customer", "agent"].includes(user_type)) {
-    return res.status(400).json({ 
-      success: false, 
-      message: "Invalid user type" 
-    });
-  }
 
   // Check user existence
-  const Model = user_type === "customer" ? Customer : Agent;
+  // const Model = role === "customer" ? Customer : Agent;
 
-  const user = await Model.findOne({ wallet_address: wallet_address.toLowerCase() });
+  const user = await User.findOne({ wallet_address: wallet_address.toLowerCase() });
 
   if (!user) {
-    return res.status(404).json({ 
-      success: false, 
-      message: `${user_type} not found` 
+    return res.status(404).json({
+      success: false,
+      message: `${role} not found`
     });
   }
 
-  if (user.kyc_status === "verified") {
-    return res.status(400).json({ 
-      success: false, 
-      message: "KYC already verified" 
+  if (user[role] && user[role].kyc_status === "verified") {
+    return res.status(400).json({
+      success: false,
+      message: "KYC already verified",
     });
   }
 
@@ -66,7 +62,6 @@ const sendKYCOTP = asyncHandler(async (req, res) => {
 
   // Send OTP using Twilio
   const formattedPhone = phone_number.startsWith("+") ? phone_number : `+91${phone_number}`;
-
   try {
     const message = await twilioClient.messages.create({
       body: `Your KYC OTP is ${otp}. It will expire in 10 minutes.`,
@@ -75,7 +70,7 @@ const sendKYCOTP = asyncHandler(async (req, res) => {
     });
 
     // Save OTP in temporary store (overwrite any previous)
-    otpStore.set(wallet_address.toLowerCase(), { otp, expires, user_type });
+    otpStore.set(wallet_address, { otp, expires, role });
 
     console.log(`OTP sent to ${formattedPhone}: ${otp}`);
 
@@ -85,11 +80,11 @@ const sendKYCOTP = asyncHandler(async (req, res) => {
       messageId: message.sid
     });
   } catch (err) {
-    console.error("❌ Twilio Error:", err.message);
-    res.status(500).json({ 
-      success: false, 
-      message: "Failed to send OTP", 
-      error: err.message 
+    console.error("Twilio Error:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "Failed to send OTP",
+      error: err.message
     });
   }
 });
@@ -97,107 +92,158 @@ const sendKYCOTP = asyncHandler(async (req, res) => {
 //VERIFY OTP
 const verifyKYCOTP = asyncHandler(async (req, res) => {
   const { wallet_address, otp } = req.body;
-
+  console.log(req.body);
   if (!wallet_address || !otp) {
-    return res.status(400).json({ 
-      success: false, 
-      message: "Wallet address and OTP required" 
+    return res.status(400).json({
+      success: false,
+      message: "Wallet address and OTP required"
     });
   }
 
-  const user = wallet_address.toLowerCase();
-  const data = otpStore.get(user);
+  const data = otpStore.get(wallet_address);
 
-  if (!data) return res.status(400).json({ 
-    success: false, 
-    message: "No OTP found" 
+  if (!data) return res.status(400).json({
+    success: false,
+    message: "No OTP found"
   });
 
   if (Date.now() > data.expires) {
-    otpStore.delete(user);// Clear used OTP
-    return res.status(400).json({ 
-      success: false, 
-      message: "OTP expired" 
+    otpStore.delete(wallet_address);
+    return res.status(400).json({
+      success: false,
+      message: "OTP expired"
     });
   }
 
-  if (otp !== data.otp) return res.status(400).json({ 
-    success: false, 
-    message: "Invalid OTP" });
+  if (otp !== data.otp) return res.status(400).json({
+    success: false,
+    message: "Invalid OTP"
+  });
 
   // Update KYC status
-  const Model = data.user_type === "customer" ? Customer : Agent;
+  const Model = data.role === "customer" ? Customer : Agent;
 
   await Model.findOneAndUpdate(
-    { wallet_address: user },
+    { wallet_address},
     { kyc_status: "verified" },
     { new: true }
   );
 
-  otpStore.delete(user); // Clear used OTP
+  otpStore.delete(wallet_address); 
 
-  console.log(`✅ KYC verified for ${data.user_type}: ${wallet_address}`);
+  console.log(`Mobile no. verified for ${data.role}: ${wallet_address}`);
 
-  res.status(200).json({ 
-    success: true, 
-    message: "KYC verified successfully" 
+  res.status(200).json({
+    success: true,
+    message: "KYC done successfully"
   });
 });
 
 // RESEND OTP
 const resendKYCOTP = asyncHandler(async (req, res) => {
-  const { wallet_address } = req.body;
+  const { wallet_address,role,phone_number } = req.body;
 
-  if (!wallet_address)
-    return res.status(400).json({ success: false, message: "Wallet address required" });
+  if (!wallet_address || !role, !phone_number)
+    return res.status(400).json({ success: false, message: "All fields required" });
 
   const existing = otpStore.get(wallet_address.toLowerCase());
-  if (!existing)
-    return res.status(400).json({ 
-  success: false, 
-  message: "No previous OTP found" });
-
-  // Reuse the same user_type and phone_number
-  req.body.user_type = existing.user_type;
-  req.body.phone_number = existing.phone_number;
-
-  return sendKYCOTP(req, res);
+  if (!existing) {
+    return sendKYCOTP(req, res);
+  }
+  
 });
 
-//check user kyc status
-const checkKYCStatus = asyncHandler(async (req, res) => {
-  const { wallet_address, user_role } = req.body;
+export const submitKYC = async (req, res) => {
+  try {
+    const { wallet_address, role, name, phone, dob, occupation, income } = req.body;
+    if (!wallet_address || !role) {
+      return res.status(400).json({ success: false, message: "Wallet address and role required" });
+    }
 
-  if (!wallet_address || !user_role) {
-    return res.status(400).json({
-      success: false,
-      message: "Wallet address and user role are required",
-    });
+    const user = await User.findOne({ wallet_address: wallet_address.toLowerCase() });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (role === "customer") {
+      let customer = await Customer.findOne({ user: user._id });
+
+      if (!customer) {
+        return res.status(404).json({ success: false, message: "Customer not found" });
+      }
+
+      customer.customer_name = name;
+      customer.customer_phone = phone;
+      customer.date_of_birth = dob;
+      customer.occupation = occupation;
+      customer.income = income;
+      customer.kyc_status = "verified";
+
+      await customer.save();
+
+      return res.status(200).json({ success: true, message: "Customer KYC verified", customer });
+    }
+
+    if (role === "agent") {
+      let agent = await Agent.findOne({ user: user._id });
+
+      if (!agent) {
+        return res.status(404).json({ success: false, message: "Agent not found" });
+      }
+
+      agent.agent_name = name;
+      agent.agent_phone = phone;
+      agent.date_of_birth = dob;
+      agent.occupation = occupation;
+      agent.income = income;
+      agent.kyc_status = "verified";
+      agent.is_approved = true;
+
+      await agent.save();
+
+      return res.status(200).json({ success: true, message: "Agent KYC verified", agent });
+    }
+
+    return res.status(400).json({ success: false, message: "Invalid role" });
+  } catch (error) {
+    console.error("KYC Submission Error:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
   }
+};
+// //check user kyc status
+// const checkKYCStatus = asyncHandler(async (req, res) => {
+//   const { wallet_address, user_role } = req.body;
 
-  if (!["customer", "agent"].includes(user_role)) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid user role",
-    });
-  }
+//   if (!wallet_address || !user_role) {
+//     return res.status(400).json({
+//       success: false,
+//       message: "Wallet address and user role are required",
+//     });
+//   }
 
-  const Model = user_role === "customer" ? Customer : Agent;
+//   if (!["customer", "agent"].includes(user_role)) {
+//     return res.status(400).json({
+//       success: false,
+//       message: "Invalid user role",
+//     });
+//   }
 
-  const user = await Model.findOne({ wallet_address: wallet_address.toLowerCase() });
+//   const Model = user_role === "customer" ? Customer : Agent;
 
-  if (!user) {
-    return res.status(404).json({
-      success: false,
-      message: `${user_role} not found`,
-    });
-  }
+//   const user = await Model.findOne({ wallet_address: wallet_address.toLowerCase() });
 
-  res.status(200).json({
-    success: true,
-    kyc_status: user.kyc_status || "pending",
-    message: `KYC status for ${user_role} is ${user.kyc_status || "pending"}`,
-  });
-});
+//   if (!user) {
+//     return res.status(404).json({
+//       success: false,
+//       message: `${user_role} not found`,
+//     });
+//   }
 
-export {generateOTP , otpStore , OTP_EXPIRY , twilioClient , sendKYCOTP , verifyKYCOTP , resendKYCOTP , checkKYCStatus}
+//   res.status(200).json({
+//     success: true,
+//     kyc_status: user.kyc_status || "pending",
+//     message: `KYC status for ${user_role} is ${user.kyc_status || "pending"}`,
+//   });
+// });
+
+export { generateOTP, otpStore, OTP_EXPIRY, twilioClient, sendKYCOTP, verifyKYCOTP, resendKYCOTP }

@@ -60,12 +60,10 @@ const CustomerSchema = new mongoose.Schema(
             type: Date,
             default: Date.now
         },
-        // nominee:[
-        // { 
-        //     type: mongoose.Schema.Types.ObjectId,
-        //     ref: "Nominee"
-        // }
-        // ],
+        policy_count: {
+            type: Number,
+            default : 0
+        }
     },
     {
         timestamps: true

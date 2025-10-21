@@ -1,20 +1,26 @@
 import mongoose from "mongoose";
 
 const PolicySchema = new mongoose.Schema({
-    customer: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Customer"
+    // Wallet addresses instead of ObjectId references
+    customer_wallet_address: {
+        type: String,
+        required: true,
+        index: true
     },
-    agent: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Agent"
+    agent_wallet_address: {
+        type: String,
+        required: true,
+        index: true
     },
+    
+    // Policy dates - automatically handled
     issueDate: {
         type: Date,
-        required: true,
+        default: Date.now
     },
     expiryDate: {
         type: Date,
+        // Will be set automatically to 10 years from issueDate
     },
 
     // Personal Details
@@ -54,20 +60,20 @@ const PolicySchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true,
+        match: [/^\d{12}$/, 'Please enter a valid 12-digit Aadhar number']
     },
     panNumber: {
         type: String,
         required: true,
         unique: true,
+        match: [/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Please enter a valid PAN number']
     },
-    nominee: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Nominee",
-    },
+
     // Financial Info
     annualIncome: {
         type: Number,
         required: true,
+        min: 0
     },
     occupation: {
         type: String,
@@ -76,13 +82,11 @@ const PolicySchema = new mongoose.Schema({
     },
     coverage_amount: {
         type: Number,
-        // required: true,
         default: 1000000,
         min: 0
     },
     premium_amount: {
         type: Number,
-        // required: true,
         default: 50000,
         min: 0
     },
@@ -93,22 +97,18 @@ const PolicySchema = new mongoose.Schema({
     },
     policy_duration: {
         type: Number,
-        // required: true,
-        default: 20,
+        default: 10, // Default 10 years to match expiry date
         min: 1
     },
-     customer: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: "Customer" 
-    },
-    agent: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: "Agent" 
-    },
+    
+    // Policy status
     status: {
         type: String,
-        enum: ["created", "active", "ongoing", "claimed", "cancelled"],
-    },  
+        enum: ["created", "active", "ongoing", "claimed", "cancelled", "expired"],
+        default: "created"
+    },
+
+    
     created_date: {
         type: Date,
         default: Date.now
@@ -116,5 +116,21 @@ const PolicySchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
+
+PolicySchema.pre('save', function(next) {
+    // Set expiry date to 10 years from issue date
+    if (this.isNew) {
+        const issueDate = this.issueDate || new Date();
+        const expiryDate = new Date(issueDate);
+        expiryDate.setFullYear(expiryDate.getFullYear() + 10);
+        this.expiryDate = expiryDate;
+        this.policy_duration = 10;
+    }
+    next();
+});
+
+PolicySchema.index({ customer_wallet_address: 1, status: 1 });
+PolicySchema.index({ agent_wallet_address: 1, status: 1 });
+// PolicySchema.index({ _id: 1 }); // Using _id as policy number
 
 export default mongoose.model("Policy", PolicySchema);
