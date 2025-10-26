@@ -160,11 +160,11 @@ export const submitKYC = async (req, res) => {
       return res.status(400).json({ success: false, message: "Wallet address and role required" });
     }
 
-    const user = await User.findOne({ wallet_address: wallet_address.toLowerCase() });
+    const user = await User.findOne({ wallet_address: wallet_address });
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
-
+    console.log("user: ",user)
     if (role === "customer") {
       let customer = await Customer.findOne({ user: user._id });
 
@@ -190,14 +190,13 @@ export const submitKYC = async (req, res) => {
       if (!agent) {
         return res.status(404).json({ success: false, message: "Agent not found" });
       }
-
+      console.log("agent: ", agent);
       agent.agent_name = name;
       agent.agent_phone = phone;
       agent.date_of_birth = dob;
       agent.occupation = occupation;
       agent.income = income;
       agent.kyc_status = "verified";
-      agent.is_approved = true;
 
       await agent.save();
 

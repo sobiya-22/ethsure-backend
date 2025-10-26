@@ -5,6 +5,8 @@ import Company from "../models/company.model.js"
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { issueJWT } from "../utils/jwt.js";
 import jwt from 'jsonwebtoken';
+
+
 const register = asyncHandler(async (req, res) => {
   const { wallet_address, email, role, name, phone, did, profile_url } = req.body;
   console.log(req.body);
@@ -33,6 +35,7 @@ const register = asyncHandler(async (req, res) => {
     case "customer":
       userData = await Customer.create({
         user: user._id,
+        customer_email: email,
         wallet_address,
         customer_did: did,
         customer_name: name,
@@ -45,6 +48,8 @@ const register = asyncHandler(async (req, res) => {
     case "agent":
       userData = await Agent.create({
         user: user._id,
+        wallet_address,
+        agent_email: email,
         agent_did: did,
         agent_name: name,
         agent_phone: phone,
@@ -106,9 +111,13 @@ const login = asyncHandler(async (req, res) => {
 });
 
 const getUser = asyncHandler(async (req, res) => {
-  const user = (await User.findOne({ wallet_address: req.params.wallet_address })
-    .populate("customer"))
-    .populated("agent");
+  console.log(req.params.wallet_address);
+  const user = await User.findOne({
+    wallet_address: req.params.wallet_address.toLowerCase()
+  })
+    .populate("customer")
+    .populate("agent");
+
   if (!user) return res.status(404).json({ success: false, message: "User not found" });
   res.json({ success: true, user });
 });

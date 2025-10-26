@@ -5,7 +5,6 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true, // ensures one account per wallet
-    lowercase: true,
     trim: true
   },
   //   did: {
