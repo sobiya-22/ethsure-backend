@@ -18,6 +18,12 @@ const CompanySchema = new mongoose.Schema({
         // unique: true,
         trim: true,
     },
+    company_email: {
+      type: String,
+      default: "",
+      lowercase: true,
+      trim: true
+    },
     wallet_address: {
         type: String,
         required: true,

@@ -7,10 +7,6 @@ const userSchema = new mongoose.Schema({
     unique: true, // ensures one account per wallet
     trim: true
   },
-  //   did: {
-  //     type: String,
-  //     default: null
-  //   },
   email: {
     type: String,
     lowercase: true,

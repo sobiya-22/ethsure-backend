@@ -13,6 +13,6 @@ router.get("/all-policies", getPolicies);
 router.get("/:id", getPolicyById);
 
 // Update policy status
-router.put("/update-status/:id", updatePolicyStatus);
+router.post("/update-status/:id", updatePolicyStatus);
 
 export default router;

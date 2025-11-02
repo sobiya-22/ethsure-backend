@@ -20,33 +20,9 @@
 // make changes and additions below ---above file remains as it is 
 
 import { asyncHandler } from "../utils/asyncHandler.js";
-import Agent from "../models/agent.model.js"; 
+import Agent from "../models/agent.model.js";
 import Policy from "../models/policy.model.js"
 import Company from "../models/company.model.js";
-
-
-const getAgent = asyncHandler(async (req, res) => {
-  const { wallet_address } = req.body;
-
-  if (!wallet_address) {
-    return res.status(400).json({ 
-      success: false, 
-      message: "Wallet address is required" });
-  }
-  // normalize for safety
-  const agent = await Agent.findOne({ 
-    wallet_address: wallet_address.toLowerCase() 
-  });
-  
-  if (!agent) {
-    return res.status(404).json({ 
-      success: false, 
-      message: "Agent not found" });
-  }
-  res.status(200).json({ 
-    success: true, 
-    data: agent });
-});
 
 // update agent
 const updateAgent = asyncHandler(async (req, res) => {
@@ -54,27 +30,28 @@ const updateAgent = asyncHandler(async (req, res) => {
   const { wallet_address, updateData } = req.body;
 
   if (!wallet_address) {
-    return res.status(400).json({ 
-      success: false, 
-      message: "Wallet address is required" });
-  }
-
-  const agent = await Agent.findOneAndUpdate(
-    { wallet_address: wallet_address.toLowerCase() },
-    updateData,
-    { new: true } 
-  );
-
-  if (!agent) {
-    return res.status(404).json({ 
-      success: false, 
-      message: "Agent not found" 
+    return res.status(400).json({
+      success: false,
+      message: "Wallet address is required"
     });
   }
 
-  res.status(200).json({ 
-    success: true, 
-    data: agent 
+  const agent = await Agent.findOneAndUpdate(
+    { wallet_address: wallet_address },
+    updateData,
+    { new: true }
+  );
+
+  if (!agent) {
+    return res.status(404).json({
+      success: false,
+      message: "Agent not found"
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    data: agent
   });
 });
 
@@ -86,7 +63,7 @@ const getPolicyRequests = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: "Wallet address is required" });
 
   // Find the agent using wallet address
-  const agent = await Agent.findOne({ wallet_address: wallet_address.toLowerCase() });
+  const agent = await Agent.findOne({ wallet_address: wallet_address });
   if (!agent)
     return res.status(404).json({ success: false, message: "Agent not found" });
 
@@ -146,7 +123,7 @@ const getAllAgentPolicies = asyncHandler(async (req, res) => {
   if (!wallet_address)
     return res.status(400).json({ success: false, message: "Wallet address is required" });
 
-  const agent = await Agent.findOne({ wallet_address: wallet_address.toLowerCase() });
+  const agent = await Agent.findOne({ wallet_address: wallet_address });
   if (!agent)
     return res.status(404).json({ success: false, message: "Agent not found" });
 
@@ -171,56 +148,47 @@ const getAllAgentPolicies = asyncHandler(async (req, res) => {
 });
 
 const sendAssociationRequest = asyncHandler(async (req, res) => {
-  const { agent_wallet_address } = req.body;
-
-  if (!agent_wallet_address) {
+  const { data } = req.body;
+  console.log(data);
+  if (!data.agent_wallet_address) {
     return res.status(400).json({
       success: false,
       message: "Agent wallet address is required",
     });
   }
+  if (!data.license_number) {
+    return res.status(400).json({
+      success: false,
+      message: "License Number is required",
+    });
+  }
+  if (!data.terms_accepted) {
+    return res.status(400).json({
+      success: false,
+      message: "First approve our terms and conditions",
+    });
+  }
+  const agent = await Agent.findOne({ wallet_address: data.agent_wallet_address });
 
-  const agent = await Agent.findOne({ wallet_address: agent_wallet_address.toLowerCase() });
-
-  if (!agent) return res.status(404).json({ 
-    success: false, 
-    message: "Agent not found" 
-  });
+  if (!agent) {
+    return res.status(404).json({
+      success: false,
+      message: "Agent not found"
+    });
+  }
 
   if (agent.kyc_status !== "verified") {
     return res.status(400).json({
       success: false,
-      message: "KYC must be verified before sending an association request",
+      message: "KYC must be verified before associating with company",
     });
   }
-
-  //Fetch company
-  const company = await Company.findOne();
-  if (!company) {
-    return res.status(404).json({
-      success: false,
-      message: "Nocompany found in the system",
-    });
-  }
-
-  //Check if already sent
-  const existingRequest = agent.association_requests.find(
-    (req) => req.associated_company?.toString() === company._id.toString()
-  );
-
-  if (existingRequest) {
-    return res.status(400).json({
-      success: false,
-      message: `Association request already ${existingRequest.status} for this company.`,
-    });
-  }
-
-  //Add new association request
-  agent.association_requests.push({
-    associated_company: company._id,
+  agent.license_number = data.license_number;
+  agent.associated_company = {
+    company: "68dfe521b067be7c7e7a40fd", // hardcoded value
     status: "pending",
     request_date: new Date(),
-  });
+  };
 
   await agent.save();
 
@@ -229,45 +197,86 @@ const sendAssociationRequest = asyncHandler(async (req, res) => {
     message: "Association request sent to company successfully.",
     data: {
       agent_wallet_address: agent.wallet_address,
-      company_wallet_address: company.wallet_address,
-      status: "pending",
+      company_id: agent.associated_company.company,
+      status: agent.associated_company.status,
     },
   });
 });
+
+
+
 //Get list of agents 
 const getAllAgents = asyncHandler(async (req, res) => {
-  // const { company_wallet_address } = req.body; 
   const { status } = req.query;
-  // status = "pending_kyc", "pending_approval", "approved" or undefined for all
-
-  // if (!company_wallet_address) {
-  //   return res.status(400).json({ success: false, message: "Company wallet address is required" });
-  // }
-
-  // const { valid, message } = await verifyCompanyAccess(company_wallet_address);
-  // if (!valid) return res.status(403).json({ success: false, message });
-
-  // Get all agents
-  let agents = await Agent.find({}).populate("user", "email").lean();
-
-  // Categorize
-  const categorized = {
-    pending_kyc: agents.filter(a => a.kyc_status === "pending"),
-    pending_approval: agents.filter(a => a.kyc_status === "verified" && !a.is_approved),
-    approved: agents.filter(a => a.kyc_status === "verified" && a.is_approved)
-  };
-
-  if (status && !["pending_kyc", "pending_approval", "approved"].includes(status)) {
-    return res.status(400).json({ success: false, message: "Invalid status filter" });
+  console.log("status: ", status);
+  if (!status) {
+    return res.status(400).json({
+      success: false,
+      message: "status fields are required",
+    });
   }
 
-  const result = status ? categorized[status] : categorized;
+  const filter = {
+    "associated_company.status": status,
+  };
 
-  res.status(200).json({
+  const agents = await Agent.find({
+    "associated_company.status": status,
+  })
+    .populate("user")
+    .populate("associated_company.company");
+
+  res.json({
     success: true,
-    total: Array.isArray(result) ? result.length : agents.length,
-    data: result
+    count: agents.length,
+    agents,
   });
 });
 
-export {getAgent , updateAgent, getAllAgentPolicies , getPolicyRequests , sendAssociationRequest,getAllAgents }
+
+const updateAgentAssociationStatus = asyncHandler(async (req, res) => {
+  const { agent_wallet_address } = req.body;
+  const { newStatus } = req.query;
+  console.log(req.body, req.query);
+  const validStatuses = ["approved", "rejected"];
+
+  if (!newStatus || !validStatuses.includes(newStatus)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid status. Allowed: approved | rejected"
+    });
+  }
+
+  // Fetch agent
+  const agent = await Agent.findOne({ wallet_address: agent_wallet_address });
+  console.log(agent)
+  if (!agent) {
+    return res.status(404).json({
+      success: false,
+      message: "Agent not found"
+    });
+  }
+
+  // Check if there's a pending request
+  if (agent.associated_company.status !== "pending") {
+    return res.status(400).json({
+      success: false,
+      message: `Cannot update status because the current status is '${agent.associated_company.status}'. Only pending requests can be updated.`
+    });
+  }
+
+  // Update status
+  agent.associated_company.status = newStatus;
+  if (newStatus === 'approved') {
+    agent.is_approved = true;
+  }
+  
+  await agent.save();
+
+  res.status(200).json({
+    success: true,
+    message: `Company association request ${newStatus}.`,
+    agent
+  });
+});
+export { updateAgent, getAllAgentPolicies, getPolicyRequests, sendAssociationRequest, getAllAgents, updateAgentAssociationStatus }

@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 
 const PolicySchema = new mongoose.Schema({
-    // Wallet addresses instead of ObjectId references
+    customer: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", default: null },
+      agent: { type: mongoose.Schema.Types.ObjectId, ref: "Agent", default: null },
     customer_wallet_address: {
         type: String,
         required: true,
@@ -104,7 +105,7 @@ const PolicySchema = new mongoose.Schema({
     // Policy status
     status: {
         type: String,
-        enum: ["created", "active", "ongoing", "claimed", "cancelled", "expired"],
+        enum: ["created", "agentApproved", "active", "claimed", "cancelled", "expired"],
         default: "created"
     },
 

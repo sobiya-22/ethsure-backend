@@ -40,7 +40,7 @@ const sendKYCOTP = asyncHandler(async (req, res) => {
   // Check user existence
   // const Model = role === "customer" ? Customer : Agent;
 
-  const user = await User.findOne({ wallet_address: wallet_address.toLowerCase() });
+  const user = await User.findOne({ wallet_address: wallet_address });
 
   if (!user) {
     return res.status(404).json({
@@ -135,7 +135,7 @@ const verifyKYCOTP = asyncHandler(async (req, res) => {
 
   res.status(200).json({
     success: true,
-    message: "KYC done successfully"
+    message: "Mobile number verified"
   });
 });
 
@@ -146,7 +146,7 @@ const resendKYCOTP = asyncHandler(async (req, res) => {
   if (!wallet_address || !role, !phone_number)
     return res.status(400).json({ success: false, message: "All fields required" });
 
-  const existing = otpStore.get(wallet_address.toLowerCase());
+  const existing = otpStore.get(wallet_address);
   if (!existing) {
     return sendKYCOTP(req, res);
   }
