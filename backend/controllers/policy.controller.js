@@ -223,6 +223,13 @@ const updatePolicyStatus = asyncHandler(async (req, res) => {
   ) {
     return res.status(403).json({ success: false, message: "Unauthorized customer" });
   }
+  const COMPANY_ADDR = '0x87D757Fc89779c8aca68Dd9655dE948F4D17f0cf'
+  if (
+    role === "company" &&
+    (COMPANY_ADDR !== wallet_address)
+  ) {
+    return res.status(403).json({ success: false, message: "Unauthorized company" });
+  }
 
   policy.status = newStatus;
   await policy.save();

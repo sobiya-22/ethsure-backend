@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const PolicySchema = new mongoose.Schema({
     customer: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", default: null },
-      agent: { type: mongoose.Schema.Types.ObjectId, ref: "Agent", default: null },
+    agent: { type: mongoose.Schema.Types.ObjectId, ref: "Agent", default: null },
     customer_wallet_address: {
         type: String,
         required: true,
@@ -13,7 +13,7 @@ const PolicySchema = new mongoose.Schema({
         required: true,
         index: true
     },
-    
+
     // Policy dates - automatically handled
     issueDate: {
         type: Date,
@@ -101,7 +101,7 @@ const PolicySchema = new mongoose.Schema({
         default: 10, // Default 10 years to match expiry date
         min: 1
     },
-    
+
     // Policy status
     status: {
         type: String,
@@ -109,7 +109,7 @@ const PolicySchema = new mongoose.Schema({
         default: "created"
     },
 
-    
+
     created_date: {
         type: Date,
         default: Date.now
@@ -118,7 +118,7 @@ const PolicySchema = new mongoose.Schema({
     timestamps: true
 });
 
-PolicySchema.pre('save', function(next) {
+PolicySchema.pre('save', function (next) {
     // Set expiry date to 10 years from issue date
     if (this.isNew) {
         const issueDate = this.issueDate || new Date();
