@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "ethers";
+import AgentABI from ("../artifacts/contracts/AgentRegistry.sol/AgentRegistry.json").abi;
 
 const AgentABI = [
   {

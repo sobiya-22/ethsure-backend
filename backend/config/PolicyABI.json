@@ -1,0 +1,254 @@
+[
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "policyId",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "address",
+					"name": "customer",
+					"type": "address"
+				}
+			],
+			"name": "PolicyClaimed",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "policyId",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "address",
+					"name": "customer",
+					"type": "address"
+				},
+				{
+					"indexed": false,
+					"internalType": "string",
+					"name": "customerDid",
+					"type": "string"
+				},
+				{
+					"indexed": false,
+					"internalType": "bytes32",
+					"name": "vcHash",
+					"type": "bytes32"
+				}
+			],
+			"name": "PolicyCreated",
+			"type": "event"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "policyId",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "bytes32",
+					"name": "newVcHash",
+					"type": "bytes32"
+				}
+			],
+			"name": "PolicyUpdated",
+			"type": "event"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "policyId",
+					"type": "uint256"
+				}
+			],
+			"name": "claimPolicy",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "customer",
+					"type": "address"
+				},
+				{
+					"internalType": "string",
+					"name": "customerDid",
+					"type": "string"
+				},
+				{
+					"internalType": "bytes32",
+					"name": "vcHash",
+					"type": "bytes32"
+				}
+			],
+			"name": "createPolicy",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "policyId",
+					"type": "uint256"
+				}
+			],
+			"name": "getPolicy",
+			"outputs": [
+				{
+					"internalType": "address",
+					"name": "customer",
+					"type": "address"
+				},
+				{
+					"internalType": "string",
+					"name": "customerDid",
+					"type": "string"
+				},
+				{
+					"internalType": "bytes32",
+					"name": "vcHash",
+					"type": "bytes32"
+				},
+				{
+					"internalType": "bool",
+					"name": "isActive",
+					"type": "bool"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "nextPolicyId",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"name": "policyActive",
+			"outputs": [
+				{
+					"internalType": "bool",
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"name": "policyCustomer",
+			"outputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"name": "policyCustomerDID",
+			"outputs": [
+				{
+					"internalType": "string",
+					"name": "",
+					"type": "string"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"name": "policyVcHash",
+			"outputs": [
+				{
+					"internalType": "bytes32",
+					"name": "",
+					"type": "bytes32"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "policyId",
+					"type": "uint256"
+				},
+				{
+					"internalType": "bytes32",
+					"name": "newVcHash",
+					"type": "bytes32"
+				}
+			],
+			"name": "updateVcHash",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		}
+	]
