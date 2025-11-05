@@ -26,6 +26,8 @@ app.use(cors({
   methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
   credentials: true,
 }));
+
+
 app.use("/api/users", userRoutes);
 app.use("/api/company", companyRoutes);
 app.use("/api/kyc" , kycRoutes );

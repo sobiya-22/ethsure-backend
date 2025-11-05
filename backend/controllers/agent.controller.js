@@ -24,37 +24,6 @@ import Agent from "../models/agent.model.js";
 import Policy from "../models/policy.model.js"
 import Company from "../models/company.model.js";
 
-// update agent
-const updateAgent = asyncHandler(async (req, res) => {
-
-  const { wallet_address, updateData } = req.body;
-
-  if (!wallet_address) {
-    return res.status(400).json({
-      success: false,
-      message: "Wallet address is required"
-    });
-  }
-
-  const agent = await Agent.findOneAndUpdate(
-    { wallet_address: wallet_address },
-    updateData,
-    { new: true }
-  );
-
-  if (!agent) {
-    return res.status(404).json({
-      success: false,
-      message: "Agent not found"
-    });
-  }
-
-  res.status(200).json({
-    success: true,
-    data: agent
-  });
-});
-
 //policies that are awaiting their approval
 const getPolicyRequests = asyncHandler(async (req, res) => {
   const { wallet_address } = req.body;
@@ -90,31 +59,6 @@ const getPolicyRequests = asyncHandler(async (req, res) => {
   });
 });
 
-// //For agents to approve, reject, or mark as ongoing.
-// const updatePolicyStatus = asyncHandler(async (req, res) => {
-//     const { policy_id, status } = req.body;
-
-//     if (!policy_id || !status) {
-//         return res.status(400).json({
-//             success: false,
-//             message: "Policy ID and status are required."
-//         });
-//     }
-
-//     const policy = await Policy.findOne({ policy_id });
-//     if (!policy) {
-//         return res.status(404).json({ success: false, message: "Policy not found" });
-//     }
-
-//     policy.status = status;
-//     await policy.save();
-
-//     res.status(200).json({
-//         success: true,
-//         message: `Policy status updated to ${status}`,
-//         data: policy
-//     });
-// });
 
 //list of all policies
 const getAllAgentPolicies = asyncHandler(async (req, res) => {
@@ -279,4 +223,4 @@ const updateAgentAssociationStatus = asyncHandler(async (req, res) => {
     agent
   });
 });
-export { updateAgent, getAllAgentPolicies, getPolicyRequests, sendAssociationRequest, getAllAgents, updateAgentAssociationStatus }
+export { getAllAgentPolicies, getPolicyRequests, sendAssociationRequest, getAllAgents, updateAgentAssociationStatus }
