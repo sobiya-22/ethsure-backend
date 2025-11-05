@@ -128,13 +128,108 @@ const getUser = asyncHandler(async (req, res) => {
     wallet_address: req.params.wallet_address
   })
     .populate("customer")
-    .populate("agent");
+    .populate("agent")
+    .populate('company');
 
   if (!user) return res.status(404).json({ success: false, message: "User not found" });
   res.json({ success: true, user });
 });
 
 
+const updateUser = asyncHandler(async (req, res) => {
+  const { wallet_address } = req.params;
+  const updates = req.body;
+
+  const user = await User.findOne({ wallet_address })
+    .populate("customer")
+    .populate("agent")
+    .populate("company");
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+  const userFields = ["email", "role"];
+  userFields.forEach((field) => {
+    if (updates[field] !== undefined) {
+      user[field] = updates[field];
+    }
+  });
+
+  let roleDoc = null;
+
+  if (user.role === "customer" && user.customer) {
+    roleDoc = await Customer.findById(user.customer);
+
+    const allowed = [
+      "customer_name",
+      "customer_phone",
+      "customer_email",
+      "address",
+      "dateOfBirth"
+    ];
+
+    allowed.forEach((field) => {
+      if (updates[field] !== undefined) {
+        roleDoc[field] = updates[field];
+      }
+    });
+
+    await roleDoc.save();
+  }
+
+  if (user.role === "agent" && user.agent) {
+    roleDoc = await Agent.findById(user.agent);
+
+    const allowed = [
+      "agent_name",
+      "agent_phone",
+      "agent_email",
+      "licenseNumber",
+    ];
+
+    allowed.forEach((field) => {
+      if (updates[field] !== undefined) {
+        roleDoc[field] = updates[field];
+      }
+    });
+
+    await roleDoc.save();
+  }
+
+  if (user.role === "company" && user.company) {
+    roleDoc = await Company.findById(user.company);
+
+    const allowed = [
+      "company_name",
+      "company_email",
+    ];
+
+    allowed.forEach((field) => {
+      if (updates[field] !== undefined) {
+        roleDoc[field] = updates[field];
+      }
+    });
+
+    await roleDoc.save();
+  }
+
+  await user.save();
+
+  const updatedUser = await User.findOne({ wallet_address })
+    .populate("customer")
+    .populate("agent")
+    .populate("company");
+
+  return res.status(200).json({
+    success: true,
+    message: "User updated successfully!",
+    user: updatedUser,
+  });
+  
+});
 export {
-  register, login, getUser
+  register, login, getUser,updateUser
 };

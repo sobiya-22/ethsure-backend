@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema({
   customer: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", default: null },
   agent: { type: mongoose.Schema.Types.ObjectId, ref: "Agent", default: null },
   company: { type: mongoose.Schema.Types.ObjectId, ref: "Company", default: null },
-  nominee: { type: mongoose.Schema.Types.ObjectId, ref: "Nominee", default: null },
+  // nominee: { type: mongoose.Schema.Types.ObjectId, ref: "Nominee", default: null },
 }, {
   timestamps: true
 });

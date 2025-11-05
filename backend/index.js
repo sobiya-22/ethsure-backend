@@ -8,7 +8,7 @@ import companyRoutes from "./routes/company.route.js";
 import kycRoutes from "./routes/kyc.route.js"
 import agentRoutes from "./routes/agent.route.js"
 import customerRoutes from "./routes/customer.route.js"
-import nomineeRoutes from "./routes/nominee.route.js"
+// import nomineeRoutes from "./routes/nominee.route.js"
 import policyRoutes from "./routes/policy.route.js"
 import fs from "fs";
 import cors from "cors";
@@ -31,7 +31,7 @@ app.use("/api/company", companyRoutes);
 app.use("/api/kyc" , kycRoutes );
 app.use("/api/agent" , agentRoutes);
 app.use("/api/customer" , customerRoutes);
-app.use("/api/nominee", nomineeRoutes);
+// app.use("/api/nominee", nomineeRoutes);
 app.use("/api/policy" , policyRoutes);
 
 app.get("/.well-known/jwks.json", (req, res) => {
