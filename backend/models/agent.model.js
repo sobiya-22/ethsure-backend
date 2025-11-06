@@ -68,7 +68,6 @@ const AgentSchema = new mongoose.Schema(
       company: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Company",
-        unique: true,
       },
       status: {
         type: String,

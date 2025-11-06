@@ -3,10 +3,12 @@ import Agent from "../models/agent.model.js";
 import Customer from "../models/customer.model.js";
 import twilio from 'twilio';
 import { asyncHandler } from "../utils/asyncHandler.js";
-
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const twilioPhone = process.env.TWILIO_PHONE_NUMBER;
+const TWILIO_ACCOUNT_SID='AC685dbafcdce796d50a5b9de265d8148e'
+const TWILIO_AUTH_TOKEN='f822bf35566bab4039dcf2dc28df919a'
+const TWILIO_PHONE_NUMBER='+13083007717'
+const accountSid = TWILIO_ACCOUNT_SID;
+const authToken = TWILIO_AUTH_TOKEN;
+const twilioPhone = TWILIO_PHONE_NUMBER;
 console.log("Twilio SID:", accountSid);
 console.log("Twilio Token:", authToken ? "Loaded ✅" : "Missing ❌");
 console.log("Twilio Phone:", twilioPhone);
@@ -143,8 +145,10 @@ const verifyKYCOTP = asyncHandler(async (req, res) => {
 const resendKYCOTP = asyncHandler(async (req, res) => {
   const { wallet_address,role,phone_number } = req.body;
 
-  if (!wallet_address || !role, !phone_number)
-    return res.status(400).json({ success: false, message: "All fields required" });
+  if (!wallet_address || !role || !phone_number) {
+  return res.status(400).json({ success: false, message: "All fields required" });
+}
+
 
   const existing = otpStore.get(wallet_address);
   if (!existing) {
