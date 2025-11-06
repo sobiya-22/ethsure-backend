@@ -25,6 +25,7 @@
     "mongoose": "^8.18.1",
     "node-jose": "^2.2.0",
     "nodemon": "^3.1.10",
+    "pinata": "^2.5.1",
     "twilio": "^5.10.2"
   }
 }

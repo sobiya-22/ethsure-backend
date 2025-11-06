@@ -11,7 +11,7 @@ const __dirname = path.dirname(__filename);
 
 const SEPOLIA_RPC ='https://sepolia.infura.io/v3/5cb89a6d2e2c4340b5cf62694bde378f';
 const PRIVATE_KEY ='db395bd00102c8e9af7f495735656b36db8026d25a408628cc98c7be16c78161';
-// Provider + Wallet
+// Provider and Wallet
 export const provider = new JsonRpcProvider(SEPOLIA_RPC);
 export const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
 

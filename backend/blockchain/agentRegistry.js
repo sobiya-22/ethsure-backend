@@ -1,8 +1,10 @@
 import { getContract,loadAbi } from "./config.js";
 
-const registryAddress = process.env.AGENT_REGISTRY_ADDRESS;
-const abiPath = "../config/AgentABI.json";
-console.log(await loadAbi('/config/AgentABI.json'));
+const AGENT_REGISTRY_ADDRESS='0xb415fd3e8e7a53056c6506a7b729951a9fe7a756'
+const registryAddress = AGENT_REGISTRY_ADDRESS;
+const abiPath = "./config/AgentABI.json";
+
+
 // Register a company DID to the caller's wallet
 export const registerCompanyOnChain = async (companyDid) => {
   const registry = await getContract(registryAddress, abiPath);
@@ -16,7 +18,11 @@ export const registerAgentOnChain = async (companyDid, agentDid, vcHash) => {
   const registry = await getContract(registryAddress, abiPath);
   const tx = await registry.registerAgent(companyDid, agentDid, vcHash);
   await tx.wait();
-  return tx.hash;
+
+  return {
+    txHash: tx.hash,
+    companyDid
+  };
 };
 
 // Revoke an agent

@@ -19,77 +19,82 @@
 
 // make changes and additions below ---above file remains as it is 
 
+
+//policies that are awaiting their approval
+// const getPolicyRequests = asyncHandler(async (req, res) => {
+//   const { wallet_address } = req.body;
+
+//   if (!wallet_address)
+//     return res.status(400).json({ success: false, message: "Wallet address is required" });
+
+// Find the agent using wallet address
+//   const agent = await Agent.findOne({ wallet_address: wallet_address });
+//   if (!agent)
+//     return res.status(404).json({ success: false, message: "Agent not found" });
+
+//   // Fetch policies assigned to this agent with status = "created"
+//   const policies = await Policy.find({
+//     agent: agent._id,
+//     status: "created"
+//   })
+//     .populate("customer", "customer_name wallet_address")
+//     .populate("agent", "agent_name wallet_address");
+
+//   if (policies.length === 0) {
+//     return res.status(200).json({
+//       success: true,
+//       message: "No pending policy requests found for this agent.",
+//       data: []
+//     });
+//   }
+
+//   res.status(200).json({
+//     success: true,
+//     message: "Pending policy requests fetched successfully.",
+//     data: policies
+//   });
+// });
+
+
+//list of all policies
+// const getAllAgentPolicies = asyncHandler(async (req, res) => {
+//   const { wallet_address } = req.body;
+
+//   if (!wallet_address)
+//     return res.status(400).json({ success: false, message: "Wallet address is required" });
+
+//   const agent = await Agent.findOne({ wallet_address: wallet_address });
+//   if (!agent)
+//     return res.status(404).json({ success: false, message: "Agent not found" });
+
+//   // Fetch all policies linked to this agent
+//   const policies = await Policy.find({ agent: agent._id })
+//     .populate("customer", "customer_name wallet_address")
+//     .populate("agent", "agent_name wallet_address");
+
+//   if (policies.length === 0) {
+//     return res.status(200).json({
+//       success: true,
+//       message: "No policies found for this agent.",
+//       data: []
+//     });
+//   }
+
+//   res.status(200).json({
+//     success: true,
+//     message: "All policies for this agent fetched successfully.",
+//     data: policies
+//   });
+// });
+
 import { asyncHandler } from "../utils/asyncHandler.js";
 import Agent from "../models/agent.model.js";
 import Policy from "../models/policy.model.js"
 import Company from "../models/company.model.js";
+import { issueAgentVC } from "../VC/createVC.js";
+import { registerAgentOnChain } from "../blockchain/agentRegistry.js";
 
-//policies that are awaiting their approval
-const getPolicyRequests = asyncHandler(async (req, res) => {
-  const { wallet_address } = req.body;
-
-  if (!wallet_address)
-    return res.status(400).json({ success: false, message: "Wallet address is required" });
-
-  // Find the agent using wallet address
-  const agent = await Agent.findOne({ wallet_address: wallet_address });
-  if (!agent)
-    return res.status(404).json({ success: false, message: "Agent not found" });
-
-  // Fetch policies assigned to this agent with status = "created"
-  const policies = await Policy.find({
-    agent: agent._id,
-    status: "created"
-  })
-    .populate("customer", "customer_name wallet_address")
-    .populate("agent", "agent_name wallet_address");
-
-  if (policies.length === 0) {
-    return res.status(200).json({
-      success: true,
-      message: "No pending policy requests found for this agent.",
-      data: []
-    });
-  }
-
-  res.status(200).json({
-    success: true,
-    message: "Pending policy requests fetched successfully.",
-    data: policies
-  });
-});
-
-
-//list of all policies
-const getAllAgentPolicies = asyncHandler(async (req, res) => {
-  const { wallet_address } = req.body;
-
-  if (!wallet_address)
-    return res.status(400).json({ success: false, message: "Wallet address is required" });
-
-  const agent = await Agent.findOne({ wallet_address: wallet_address });
-  if (!agent)
-    return res.status(404).json({ success: false, message: "Agent not found" });
-
-  // Fetch all policies linked to this agent
-  const policies = await Policy.find({ agent: agent._id })
-    .populate("customer", "customer_name wallet_address")
-    .populate("agent", "agent_name wallet_address");
-
-  if (policies.length === 0) {
-    return res.status(200).json({
-      success: true,
-      message: "No policies found for this agent.",
-      data: []
-    });
-  }
-
-  res.status(200).json({
-    success: true,
-    message: "All policies for this agent fetched successfully.",
-    data: policies
-  });
-});
+const COMPANY_DID = `did:ethr:0x1:0x87D757Fc89779c8aca68Dd9655dE948F4D17f0cf`;
 
 const sendAssociationRequest = asyncHandler(async (req, res) => {
   const { data } = req.body;
@@ -209,18 +214,30 @@ const updateAgentAssociationStatus = asyncHandler(async (req, res) => {
     });
   }
 
+  //issue agent vc
+  const agentVC = await issueAgentVC({
+    agentDid: "did:ethr:agent123",
+    companyDid: COMPANY_DID,
+    name: "John Doe",
+    licenseNumber: "LIC-99882"
+  });
+
+  console.log(agentVC);
   // Update status
+  let blockchainTxn = null;
   agent.associated_company.status = newStatus;
   if (newStatus === 'approved') {
     agent.is_approved = true;
+    blockchainTxn = await registerAgentOnChain(COMPANY_DID, agent.agent_did, agentVC.hash);
   }
-  
+
   await agent.save();
 
   res.status(200).json({
     success: true,
     message: `Company association request ${newStatus}.`,
-    agent
+    agent,
+    blockchainTxn
   });
 });
-export { getAllAgentPolicies, getPolicyRequests, sendAssociationRequest, getAllAgents, updateAgentAssociationStatus }
+export { sendAssociationRequest, getAllAgents, updateAgentAssociationStatus }

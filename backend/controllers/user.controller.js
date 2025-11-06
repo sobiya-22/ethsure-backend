@@ -5,7 +5,7 @@ import Company from "../models/company.model.js"
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { issueJWT } from "../utils/jwt.js";
 import jwt from 'jsonwebtoken';
-
+import { getAgentCompany,isAgentRegistered,getAgentVcHash } from "../blockchain/agentRegistry.js";
 
 const register = asyncHandler(async (req, res) => {
   const { wallet_address, email, role, name, phone, did, profile_url } = req.body;
@@ -94,8 +94,7 @@ const login = asyncHandler(async (req, res) => {
   const user = await User.findOne({ wallet_address: wallet_address })
     .populate("customer")
     .populate("agent")
-    .populate("company")
-    .populate("nominee");
+    .populate("company");
 
   if (!user) {
     return res.status(404).json({
@@ -103,6 +102,25 @@ const login = asyncHandler(async (req, res) => {
       message: "Account does not exist. Please sign up first.",
     });
   }
+
+ let blockchainInfo = {
+  isOnChainRegistered: false,
+  onChainCompanyDid: null,
+  agentRegistrationTxHash: null
+};
+
+if (user.role === "agent") {
+  const agentDid = user.agent?.agent_did;
+
+  if (agentDid) {
+    blockchainInfo.isOnChainRegistered = await isAgentRegistered(agentDid);
+
+    if (blockchainInfo.isOnChainRegistered) {
+      blockchainInfo.onChainCompanyDid = await getAgentCompany(agentDid);
+      blockchainInfo.agentRegistrationTxHash = await getAgentVcHash(agentDid);
+    }
+  }
+}
   const token = jwt.sign(
     { id: user._id, email: user.email, role: user.role },
     process.env.JWT_SECRET,
@@ -119,6 +137,7 @@ const login = asyncHandler(async (req, res) => {
     message: "Login successful",
     token,
     user,
+    blockchainInfo,
   });
 });
 
@@ -132,7 +151,19 @@ const getUser = asyncHandler(async (req, res) => {
     .populate('company');
 
   if (!user) return res.status(404).json({ success: false, message: "User not found" });
-  res.json({ success: true, user });
+  let blockchainInfo = {};
+
+  if (user.role === "agent") {
+    const agentDid = user.agent?.agent_did;
+
+    if (agentDid) {
+      blockchainInfo.isOnChainRegistered = await isAgentRegistered(agentDid);
+      blockchainInfo.onChainCompanyDid = blockchainInfo.isOnChainRegistered
+        ? await getAgentCompany(agentDid)
+        : null;
+    }
+  }
+  res.json({ success: true, user,blockchainInfo });
 });
 
 
