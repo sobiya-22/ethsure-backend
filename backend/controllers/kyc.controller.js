@@ -3,9 +3,9 @@ import Agent from "../models/agent.model.js";
 import Customer from "../models/customer.model.js";
 import twilio from 'twilio';
 import { asyncHandler } from "../utils/asyncHandler.js";
-const TWILIO_ACCOUNT_SID='AC685dbafcdce796d50a5b9de265d8148e'
-const TWILIO_AUTH_TOKEN='f822bf35566bab4039dcf2dc28df919a'
-const TWILIO_PHONE_NUMBER='+13083007717'
+const TWILIO_ACCOUNT_SID='AC52d85b70a77490b4160713bee8661fd5'
+const TWILIO_AUTH_TOKEN='3c11a2836f46593414748afe7c4619c6'
+const TWILIO_PHONE_NUMBER='+12175826611'
 const accountSid = TWILIO_ACCOUNT_SID;
 const authToken = TWILIO_AUTH_TOKEN;
 const twilioPhone = TWILIO_PHONE_NUMBER;
