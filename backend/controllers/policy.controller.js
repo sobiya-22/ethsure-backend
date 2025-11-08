@@ -2,7 +2,9 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import Policy from "../models/policy.model.js";
 import Customer from "../models/customer.model.js"
 import Agent from "../models/agent.model.js"
-import { wallet } from "../blockchain/config.js";
+import {issuePolicyVC} from "../VC/createVC.js";
+
+const COMPANY_DID = `did:ethr:0x1:0x87D757Fc89779c8aca68Dd9655dE948F4D17f0cf`;
 
 
 const createPolicy = asyncHandler(async (req, res) => {
@@ -24,6 +26,9 @@ const createPolicy = asyncHandler(async (req, res) => {
     premium_amount,
     premium_frequency,
     policy_duration = 10,
+    nomineeName,
+    nomineeAge,
+    nomineeRelation,
   } = req.body;
   console.log(req.body);
   if (!customer_wallet_address || !agent_wallet_address) {
@@ -65,7 +70,7 @@ const createPolicy = asyncHandler(async (req, res) => {
 
   // Create the policy
   const newPolicy = await Policy.create({
-    customer: customer._id,      // ✅ ADD THIS
+    customer: customer._id, 
     agent: agent._id,
     customer_wallet_address: customer_wallet_address,
     agent_wallet_address: agent_wallet_address,
@@ -85,6 +90,11 @@ const createPolicy = asyncHandler(async (req, res) => {
     premium_frequency,
     policy_duration: 10,
     status: "created",
+    nominee: {
+      nominee_name: nomineeName,
+      nominee_age: nomineeAge,
+      nominee_relation: nomineeRelation,
+    },
   });
 
   // Update customer's policy count
@@ -124,8 +134,8 @@ const getPolicies = asyncHandler(async (req, res) => {
   if (agent_wallet_address) {
     filter.agent_wallet_address = agent_wallet_address;
   }
-
-  if (status) filter.status = status;
+  filter.status = { $ne: "claimed" };
+  if (status && status!=='claimed') filter.status = status;
 
   console.log("Filter being applied:", filter);
 
@@ -182,7 +192,7 @@ const updatePolicyStatus = asyncHandler(async (req, res) => {
 
   // Define valid transitions per role
   const transitions = {
-    customer: { from: null, to: ["created"] }, // Customer creates policy
+    customer: { from: null, to: ["created","claimed"] }, // Customer creates policy
     agent: { from: "created", to: ["agentApproved", "cancelled"] },
     company: { from: "agentApproved", to: ["active", "cancelled"] },
   };
@@ -230,7 +240,18 @@ const updatePolicyStatus = asyncHandler(async (req, res) => {
   ) {
     return res.status(403).json({ success: false, message: "Unauthorized company" });
   }
-
+  if(newStatus === 'approved' && role==='company'){
+    const policyVC = await issuePolicyVC({
+      policyId :policy._id,
+      customerWallet : policy.customer_wallet_address,
+      coverageAmount :policy.coverage_amount,
+      premiumAmount : policy.premium_amount,
+      durationYears : policy.policy_duration,
+      status: newStatus,
+      companyDid :COMPANY_DID
+    });
+    console.log(policyVC);
+  }
   policy.status = newStatus;
   await policy.save();
 

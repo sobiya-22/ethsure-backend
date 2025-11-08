@@ -108,11 +108,25 @@ const PolicySchema = new mongoose.Schema({
         enum: ["created", "agentApproved", "active", "claimed", "cancelled", "expired"],
         default: "created"
     },
-
-
     created_date: {
         type: Date,
         default: Date.now
+    },
+    nominee:{
+        nominee_name:{
+            type: String,
+            required: true,
+            trim: true
+        },
+        nominee_age: {
+            type: Number,
+            required: true,
+            min: 0
+        },
+        nominee_relation:{
+            type:String,
+            required:true
+        }
     }
 }, {
     timestamps: true

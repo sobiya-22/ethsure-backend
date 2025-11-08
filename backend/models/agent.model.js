@@ -78,6 +78,12 @@ const AgentSchema = new mongoose.Schema(
         type: Date,
         default: Date.now
       },
+      agent_VC:{
+        type:JSON
+      },
+      txn_hash:{
+        type:String
+      }
     }
   },
   {

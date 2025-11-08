@@ -71,7 +71,7 @@ export const isPolicyExists = async (policyId) => {
 };
 
 /**
- * Get next policy ID (useful for UI previews)
+ * Get next policy ID 
  */
 export const getNextPolicyId = async () => {
   const registry = await getContract(registryAddress, abiPath);

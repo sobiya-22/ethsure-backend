@@ -19,10 +19,7 @@ export const registerAgentOnChain = async (companyDid, agentDid, vcHash) => {
   const tx = await registry.registerAgent(companyDid, agentDid, vcHash);
   await tx.wait();
 
-  return {
-    txHash: tx.hash,
-    companyDid
-  };
+  return tx.hash;
 };
 
 // Revoke an agent
