@@ -56,7 +56,7 @@ export function hashVC(vc) {
         .digest("hex");
 }
 
-export async function uploadVCtoIPFS(vc) {
+export async function uploadVCtoIPFS(vc,options={}) {
     try {
         const result = await pinata.pinJSONToIPFS(vc, {
         pinataMetadata: {

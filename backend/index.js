@@ -14,9 +14,6 @@ import fs from "fs";
 import cors from "cors";
 dotenv.config();
 
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const twilioPhone = process.env.TWILIO_PHONE_NUMBER;
 const PORT = process.env.PORT;
 const app = express();
 app.use(express.json());

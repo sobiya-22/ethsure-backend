@@ -127,6 +127,15 @@ const PolicySchema = new mongoose.Schema({
             type:String,
             required:true
         }
+    },
+    policy_VC:{
+        type:JSON
+    },
+    txn_hash:{
+        type:String
+    },
+    onchain_policyID:{
+        type: Number
     }
 }, {
     timestamps: true

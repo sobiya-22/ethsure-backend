@@ -1,9 +1,8 @@
 import { getContract, loadAbi } from "./config.js";
 
-const registryAddress = process.env.POLICY_REGISTRY_ADDRESS;
-const abiPath = "../config/PolicyABI.json";
-
-console.log(await loadAbi("/config/PolicyABI.json"));
+const POLICY_REGISTRY_ADDRESS = '0xb6af491ab07c4ddf9ffbddd3d6062971065f2b19'
+const registryAddress = POLICY_REGISTRY_ADDRESS;
+const abiPath = "./config/PolicyABI.json";
 
 /**
  * Create a new policy on-chain
@@ -13,10 +12,19 @@ export const createPolicyOnChain = async (customerAddress, customerDid, vcHash) 
 
   const tx = await registry.createPolicy(customerAddress, customerDid, vcHash);
   const receipt = await tx.wait();
+    const event = receipt.logs
+    .map(log => {
+        try { return registry.interface.parseLog(log); }
+        catch { return null; }
+    })
+    .find(parsed => parsed && parsed.name === "PolicyCreated");
 
+  if (!event) throw new Error("PolicyCreated event not found");
+
+  const policyId = event.args.policyId.toString();
   return {
     txHash: tx.hash,
-    policyId: Number(receipt.logs[0]?.args?.policyId || 0), // safest
+    policyId,
   };
 };
 

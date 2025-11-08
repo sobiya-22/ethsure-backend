@@ -3,7 +3,7 @@ import Policy from "../models/policy.model.js";
 import Customer from "../models/customer.model.js"
 import Agent from "../models/agent.model.js"
 import {issuePolicyVC} from "../VC/createVC.js";
-
+import {createPolicyOnChain} from "../blockchain/policyRegistry.js";
 const COMPANY_DID = `did:ethr:0x1:0x87D757Fc89779c8aca68Dd9655dE948F4D17f0cf`;
 
 
@@ -182,7 +182,7 @@ const updatePolicyStatus = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: "Wallet addr,role and new status is required!" });
   }
 
-  const policy = await Policy.findById(id)
+  const policy = await Policy.findById(id).populate("customer");
 
   if (!policy) {
     return res.status(404).json({ success: false, message: "Policy not found" });
@@ -240,10 +240,12 @@ const updatePolicyStatus = asyncHandler(async (req, res) => {
   ) {
     return res.status(403).json({ success: false, message: "Unauthorized company" });
   }
-  if(newStatus === 'approved' && role==='company'){
+  let blockchainTxn=null;
+  if(newStatus === 'active' && role==='company'){
     const policyVC = await issuePolicyVC({
       policyId :policy._id,
       customerWallet : policy.customer_wallet_address,
+      customerDid : policy.customer.customer_did,
       coverageAmount :policy.coverage_amount,
       premiumAmount : policy.premium_amount,
       durationYears : policy.policy_duration,
@@ -251,6 +253,14 @@ const updatePolicyStatus = asyncHandler(async (req, res) => {
       companyDid :COMPANY_DID
     });
     console.log(policyVC);
+    blockchainTxn = await createPolicyOnChain(policy.customer_wallet_address,policy.customer.customer_did,policyVC.hash);
+    policy.policy_VC = policyVC;
+    policy.txn_hash = blockchainTxn.txHash;
+    policy.onchain_policyID = blockchainTxn.policyId;
+  }
+
+  if(newStatus === 'claimed' && role==='customer'){
+    blockchainTxn = await claimPolicyOnChain(policy._id)
   }
   policy.status = newStatus;
   await policy.save();
