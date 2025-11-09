@@ -3,15 +3,12 @@
   "version": "1.0.0",
   "type": "module",
   "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^2.0.2",
-    "@nomicfoundation/hardhat-verify": "^3.0.2",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "@types/node": "^18.16.18",
     "chai": "^4.5.0",
     "dotenv": "^16.6.1",
     "ethers": "^5.7.2",
-    "hardhat": "^2.22.5",
     "mocha": "^10.8.2"
   }
 }
