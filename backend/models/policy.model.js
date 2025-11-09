@@ -112,8 +112,8 @@ const PolicySchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
-    nominee:{
-        nominee_name:{
+    nominee: {
+        nominee_name: {
             type: String,
             required: true,
             trim: true
@@ -123,19 +123,30 @@ const PolicySchema = new mongoose.Schema({
             required: true,
             min: 0
         },
-        nominee_relation:{
-            type:String,
-            required:true
+        nominee_relation: {
+            type: String,
+            required: true
         }
     },
-    policy_VC:{
-        type:JSON
+    policy_VC: {
+        type: JSON
     },
-    txn_hash:{
-        type:String
+    txn_hash: {
+        type: String
     },
-    onchain_policyID:{
+    onchain_policyID: {
         type: Number
+    },
+    documents: {
+        aadharcard_url: {
+            type: String,
+        },
+        pancard_url: {
+            type: String,
+        },
+        nominee_id_url: {
+            type: String
+        }
     }
 }, {
     timestamps: true
