@@ -2,8 +2,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import Policy from "../models/policy.model.js";
 import Customer from "../models/customer.model.js"
 import Agent from "../models/agent.model.js"
-import {issuePolicyVC} from "../VC/createVC.js";
-import {createPolicyOnChain, claimPolicyOnChain} from "../blockchain/policyRegistry.js";
+import { issuePolicyVC } from "../VC/createVC.js";
+import { createPolicyOnChain, claimPolicyOnChain } from "../blockchain/policyRegistry.js";
 const COMPANY_DID = process.env.COMPANY_DID;
 
 
@@ -25,7 +25,7 @@ const createPolicy = asyncHandler(async (req, res) => {
     coverage_amount,
     premium_amount,
     premium_frequency,
-    policy_duration=10,
+    policy_duration = 10,
     nomineeName,
     nomineeAge,
     nomineeRelation,
@@ -70,7 +70,7 @@ const createPolicy = asyncHandler(async (req, res) => {
 
   // Create the policy
   const newPolicy = await Policy.create({
-    customer: customer._id, 
+    customer: customer._id,
     agent: agent._id,
     customer_wallet_address: customer_wallet_address,
     agent_wallet_address: agent_wallet_address,
@@ -135,7 +135,7 @@ const getPolicies = asyncHandler(async (req, res) => {
     filter.agent_wallet_address = agent_wallet_address;
   }
   filter.status = { $ne: "claimed" };
-  if (status && status!=='claimed') filter.status = status;
+  if (status && status !== 'claimed') filter.status = status;
 
   console.log("Filter being applied:", filter);
 
@@ -192,7 +192,7 @@ const updatePolicyStatus = asyncHandler(async (req, res) => {
 
   // Define valid transitions per role
   const transitions = {
-    customer: { from: null, to: ["created","claimed"] }, // Customer creates policy
+    customer: { from: null, to: ["created", "claimed"] }, // Customer creates policy
     agent: { from: "created", to: ["agentApproved", "cancelled"] },
     company: { from: "agentApproved", to: ["active", "cancelled"] },
   };
@@ -219,7 +219,7 @@ const updatePolicyStatus = asyncHandler(async (req, res) => {
       message: `Invalid status ${newStatus} for role '${role}'`,
     });
   }
-
+  console.log(policy);
   if (
     role === "agent" &&
     (policy.agent_wallet_address !== wallet_address)
@@ -240,26 +240,30 @@ const updatePolicyStatus = asyncHandler(async (req, res) => {
   ) {
     return res.status(403).json({ success: false, message: "Unauthorized company" });
   }
-  let blockchainTxn=null;
-  if(newStatus === 'active' && role==='company'){
+  let blockchainTxn = null;
+  if (newStatus === 'active' && role === 'company') {
     const policyVC = await issuePolicyVC({
-      policyId :policy._id,
-      customerWallet : policy.customer_wallet_address,
-      customerDid : policy.customer.customer_did,
-      coverageAmount :policy.coverage_amount,
-      premiumAmount : policy.premium_amount,
-      durationYears : policy.policy_duration,
+      policyId: policy._id,
+      customerWallet: policy.customer_wallet_address,
+      customerDid: policy?.customer?.customer_did,
+      coverageAmount: policy.coverage_amount,
+      premiumAmount: policy.premium_amount,
+      durationYears: policy.policy_duration,
       status: newStatus,
-      companyDid :COMPANY_DID
+      companyDid: COMPANY_DID
     });
     console.log(policyVC);
-    blockchainTxn = await createPolicyOnChain(policy.customer_wallet_address,policy.customer.customer_did,policyVC.hash);
+    blockchainTxn = await createPolicyOnChain(
+      policy.customer_wallet_address,
+      policy.customer.customer_did,
+      policyVC.hash
+    );
     policy.policy_VC = policyVC;
     policy.txn_hash = blockchainTxn.txHash;
     policy.onchain_policyID = blockchainTxn.policyId;
   }
 
-  if(newStatus === 'claimed' && role==='customer'){
+  if (newStatus === 'claimed' && role === 'customer') {
     blockchainTxn = await claimPolicyOnChain(policy.onchain_policyID);
   }
   policy.status = newStatus;
