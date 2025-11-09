@@ -29,6 +29,9 @@ const createPolicy = asyncHandler(async (req, res) => {
     nomineeName,
     nomineeAge,
     nomineeRelation,
+    aadharcard_url,
+    pancard_url,
+    nominee_id_url,
   } = req.body;
   console.log(req.body);
   if (!customer_wallet_address || !agent_wallet_address) {
@@ -72,8 +75,8 @@ const createPolicy = asyncHandler(async (req, res) => {
   const newPolicy = await Policy.create({
     customer: customer._id,
     agent: agent._id,
-    customer_wallet_address: customer_wallet_address,
-    agent_wallet_address: agent_wallet_address,
+    customer_wallet_address,
+    agent_wallet_address,
     fullName,
     dateOfBirth,
     gender,
@@ -90,12 +93,16 @@ const createPolicy = asyncHandler(async (req, res) => {
     premium_frequency,
     policy_duration,
     status: "created",
+    aadharcard_url,
+    pancard_url,
+    nominee_id_url,
     nominee: {
       nominee_name: nomineeName,
       nominee_age: nomineeAge,
       nominee_relation: nomineeRelation,
     },
   });
+
 
   // Update customer's policy count
   await Customer.findOneAndUpdate(
