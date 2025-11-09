@@ -10,6 +10,7 @@ import agentRoutes from "./routes/agent.route.js"
 import customerRoutes from "./routes/customer.route.js"
 // import nomineeRoutes from "./routes/nominee.route.js"
 import policyRoutes from "./routes/policy.route.js"
+// import { print } from "./blockchain/config.js";
 import fs from "fs";
 import cors from "cors";
 dotenv.config();
@@ -42,5 +43,5 @@ app.get("/.well-known/jwks.json", (req, res) => {
 app.listen(PORT, () => {
   console.log("backend running on port 5000");
   connectDB();
-
+  // print();
 });
