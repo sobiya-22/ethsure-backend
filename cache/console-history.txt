@@ -1,4 +1,0 @@
-console.log(ethers.utils.formatEther(balance));
-const balance = await ethers.provider.getBalance("0x3FCE4c894F59e025CB9DcAE051a245d8Cac9F851");
-console.log(await deployer.getBalance());
-const [deployer] = await ethers.getSigners();
