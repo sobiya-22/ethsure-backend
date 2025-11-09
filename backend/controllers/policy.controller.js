@@ -93,9 +93,11 @@ const createPolicy = asyncHandler(async (req, res) => {
     premium_frequency,
     policy_duration,
     status: "created",
-    aadharcard_url,
-    pancard_url,
-    nominee_id_url,
+    documents: {
+      aadharcard_url,
+      pancard_url,
+      nominee_id_url,
+    },
     nominee: {
       nominee_name: nomineeName,
       nominee_age: nomineeAge,
