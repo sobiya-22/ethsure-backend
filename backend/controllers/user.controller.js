@@ -5,7 +5,7 @@ import Company from "../models/company.model.js"
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { issueJWT } from "../utils/jwt.js";
 import jwt from 'jsonwebtoken';
-import { getAgentCompany,isAgentRegistered,getAgentVcHash } from "../blockchain/agentRegistry.js";
+import { getAgentCompany, isAgentRegistered, getAgentVcHash } from "../blockchain/agentRegistry.js";
 
 const register = asyncHandler(async (req, res) => {
   const { wallet_address, email, role, name, phone, did, profile_url } = req.body;
@@ -103,24 +103,24 @@ const login = asyncHandler(async (req, res) => {
     });
   }
 
- let blockchainInfo = {
-  isOnChainRegistered: false,
-  onChainCompanyDid: null,
-  agentRegistrationTxHash: null
-};
+  let blockchainInfo = {
+    isOnChainRegistered: false,
+    onChainCompanyDid: null,
+    agentRegistrationTxHash: null
+  };
 
-if (user.role === "agent") {
-  const agentDid = user.agent?.agent_did;
+  if (user.role === "agent") {
+    const agentDid = user.agent?.agent_did;
 
-  if (agentDid) {
-    blockchainInfo.isOnChainRegistered = await isAgentRegistered(agentDid);
+    if (agentDid) {
+      blockchainInfo.isOnChainRegistered = await isAgentRegistered(agentDid);
 
-    if (blockchainInfo.isOnChainRegistered) {
-      blockchainInfo.onChainCompanyDid = await getAgentCompany(agentDid);
-      blockchainInfo.agentRegistrationTxHash = await getAgentVcHash(agentDid);
+      if (blockchainInfo.isOnChainRegistered) {
+        blockchainInfo.onChainCompanyDid = await getAgentCompany(agentDid);
+        blockchainInfo.agentRegistrationTxHash = await getAgentVcHash(agentDid);
+      }
     }
   }
-}
   const token = jwt.sign(
     { id: user._id, email: user.email, role: user.role },
     process.env.JWT_SECRET,
@@ -163,7 +163,7 @@ const getUser = asyncHandler(async (req, res) => {
         : null;
     }
   }
-  res.json({ success: true, user,blockchainInfo });
+  res.json({ success: true, user, blockchainInfo });
 });
 
 
@@ -259,8 +259,8 @@ const updateUser = asyncHandler(async (req, res) => {
     message: "User updated successfully!",
     user: updatedUser,
   });
-  
+
 });
 export {
-  register, login, getUser,updateUser
+  register, login, getUser, updateUser
 };

@@ -4,13 +4,13 @@ import Customer from "../models/customer.model.js";
 import twilio from "twilio";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-const TWILIO_ACCOUNT_SID='AC9c48773245f3d87e95307a31bf3f332b'
-const TWILIO_AUTH_TOKEN='b09f14e5d2857adcabf565b3fcf34ee0'
-const TWILIO_VERIFY_SERVICE_ID='VA033c645972f8ff08d8e92718e4189403'
+const TWILIO_ACCOUNT_SID=process.env.TWILIO_ACCOUNT_SID
+const TWILIO_AUTH_TOKEN=process.env.TWILIO_AUTH_TOKEN
+const TWILIO_VERIFY_SERVICE_ID=process.env.TWILIO_VERIFY_SERVICE_ID
 
 const client = twilio(
   TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
+  TWILIO_AUTH_TOKEN
 );
 
 //
@@ -49,7 +49,7 @@ export const sendKYCOTP = asyncHandler(async (req, res) => {
 
   try {
     const result = await client.verify.v2
-      .services(process.env.TWILIO_VERIFY_SERVICE_ID)
+      .services(TWILIO_VERIFY_SERVICE_ID)
       .verifications.create({
         to: formattedPhone,
         channel: "sms",
@@ -102,7 +102,7 @@ export const verifyKYCOTP = asyncHandler(async (req, res) => {
       });
     }
 
-    // OTP SUCCESSFUL → Now update KYC status based on role
+    // OTP SUCCESSFUL - Now update KYC status based on role
     const user = await User.findOne({ wallet_address });
 
     if (!user) {

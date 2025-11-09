@@ -1,9 +1,10 @@
 import pinataSDK from "@pinata/sdk";
 import crypto from "crypto";
-
-const PINATA_API_KEY = 'c69ce1d0960d326b09df'
-const PINATA_API_SECRET = 'd9341f8615213c38628133cca2c74468c9de63e3230e0a5a5d2949de77c0d60b'
-const PINATA_GROUP_ID = '2ee967b9-578f-42d7-8e3a-282fd4e50b46'
+import dotenv from "dotenv";
+dotenv.config();
+const PINATA_API_KEY = process.env.PINATA_API_KEY
+const PINATA_API_SECRET = process.env.PINATA_API_SECRET
+const PINATA_GROUP_ID = process.env.PINATA_GROUP_ID
 const pinata = new pinataSDK(PINATA_API_KEY, PINATA_API_SECRET);
 
 

@@ -3,6 +3,8 @@ import { ethers } from "ethers";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import dotenv from "dotenv";
+dotenv.config();
 
 // Fix dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -23,7 +25,7 @@ describe("PolicyRegistry - Sepolia Deployment", function () {
     this.timeout(60000);
 
     const provider = new ethers.providers.JsonRpcProvider(
-        "https://sepolia.infura.io/v3/5cb89a6d2e2c4340b5cf62694bde378f"
+        process.env.SEPOLIA_RPC
     );
 
     const deployer = new ethers.Wallet("db395bd00102c8e9af7f495735656b36db8026d25a408628cc98c7be16c78161", provider);
@@ -33,7 +35,7 @@ describe("PolicyRegistry - Sepolia Deployment", function () {
 
     let registry;
 
-    const registryAddress = "0xb6af491ab07c4ddf9ffbddd3d6062971065f2b19";
+    const registryAddress = process.env.POLICY_REGISTRY_CONTRACT_ADDRESS;
 
     before(async function () {
         registry = new ethers.Contract(registryAddress, PolicyABI, companySigner);

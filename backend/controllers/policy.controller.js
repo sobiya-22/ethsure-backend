@@ -4,7 +4,7 @@ import Customer from "../models/customer.model.js"
 import Agent from "../models/agent.model.js"
 import {issuePolicyVC} from "../VC/createVC.js";
 import {createPolicyOnChain} from "../blockchain/policyRegistry.js";
-const COMPANY_DID = `did:ethr:0x1:0x87D757Fc89779c8aca68Dd9655dE948F4D17f0cf`;
+const COMPANY_DID = process.env.COMPANY_DID;
 
 
 const createPolicy = asyncHandler(async (req, res) => {
@@ -233,10 +233,10 @@ const updatePolicyStatus = asyncHandler(async (req, res) => {
   ) {
     return res.status(403).json({ success: false, message: "Unauthorized customer" });
   }
-  const COMPANY_ADDR = '0x87D757Fc89779c8aca68Dd9655dE948F4D17f0cf'
+  const COMPANY_ADDRESS = '0x87D757Fc89779c8aca68Dd9655dE948F4D17f0cf'
   if (
     role === "company" &&
-    (COMPANY_ADDR !== wallet_address)
+    (COMPANY_ADDRESS !== wallet_address)
   ) {
     return res.status(403).json({ success: false, message: "Unauthorized company" });
   }

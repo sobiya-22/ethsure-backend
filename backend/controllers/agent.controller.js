@@ -5,7 +5,7 @@ import Company from "../models/company.model.js";
 import { issueAgentVC } from "../VC/createVC.js";
 import { registerAgentOnChain } from "../blockchain/agentRegistry.js";
 
-const COMPANY_DID = `did:ethr:0x1:0x87D757Fc89779c8aca68Dd9655dE948F4D17f0cf`;
+const COMPANY_DID =process.env.COMPANY_DID;
 
 const sendAssociationRequest = asyncHandler(async (req, res) => {
   const { data } = req.body;
@@ -45,7 +45,7 @@ const sendAssociationRequest = asyncHandler(async (req, res) => {
   }
   agent.license_number = data.license_number;
   agent.associated_company = {
-    company: "68dfe521b067be7c7e7a40fd", // hardcoded value
+    company: process.env.COMPANY_MONGODB_ID, // hardcoded value
     status: "pending",
     request_date: new Date(),
   };

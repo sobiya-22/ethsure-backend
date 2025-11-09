@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import fs from "fs";
-
+import dotenv from "dotenv";
+dotenv.config();
 const privateKey = fs.readFileSync("private.pem", "utf8");
 const publicKey = fs.readFileSync("public.pem", "utf8");
 const ISSUER = process.env.JWT_ISSUER;
