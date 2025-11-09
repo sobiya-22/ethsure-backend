@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
+    "build": "esbuild index.js --bundle --format=esm --platform=node --outfile=dist/index.js",
     "test": "mocha --timeout 60000"
   },
   "keywords": [],
@@ -27,5 +28,8 @@
     "nodemon": "^3.1.10",
     "pinata": "^2.5.1",
     "twilio": "^5.10.2"
+  },
+  "devDependencies": {
+    "esbuild": "^0.26.0"
   }
 }
