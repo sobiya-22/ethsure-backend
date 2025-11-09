@@ -84,6 +84,17 @@ const AgentSchema = new mongoose.Schema(
       txn_hash:{
         type:String
       }
+    },
+    documents: {
+      aadharcard_url: {
+        type:String,
+      },
+      pancard_url: {
+        type:String,
+      },
+      license_url: {
+        type:String,
+      },
     }
   },
   {

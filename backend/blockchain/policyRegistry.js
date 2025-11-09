@@ -1,5 +1,6 @@
 import { getContract, loadAbi } from "./config.js";
-
+import dotenv from "dotenv";
+dotenv.config();
 const POLICY_REGISTRY_ADDRESS = process.env.POLICY_REGISTRY_ADDRESS;
 const abiPath = "./config/PolicyABI.json";
 
@@ -7,7 +8,7 @@ const abiPath = "./config/PolicyABI.json";
  * Create a new policy on-chain
  */
 export const createPolicyOnChain = async (customerAddress, customerDid, vcHash) => {
-  const registry = await getContract(POLICY_REGICTRY_ADDRESS, abiPath);
+  const registry = await getContract(POLICY_REGISTRY_ADDRESS, abiPath);
 
   const tx = await registry.createPolicy(customerAddress, customerDid, vcHash);
   const receipt = await tx.wait();
@@ -31,7 +32,7 @@ export const createPolicyOnChain = async (customerAddress, customerDid, vcHash) 
  * Claim a policy (customer only)
  */
 export const claimPolicyOnChain = async (policyId) => {
-  const registry = await getContract(POLICY_REGICTRY_ADDRESS, abiPath);
+  const registry = await getContract(POLICY_REGISTRY_ADDRESS, abiPath);
 
   const tx = await registry.claimPolicy(policyId);
   await tx.wait();
@@ -43,7 +44,7 @@ export const claimPolicyOnChain = async (policyId) => {
  * Update VC hash (customer only)
  */
 export const updatePolicyVcHashOnChain = async (policyId, newVcHash) => {
-  const registry = await getContract(POLICY_REGICTRY_ADDRESS, abiPath);
+  const registry = await getContract(POLICY_REGISTRY_ADDRESS, abiPath);
 
   const tx = await registry.updateVcHash(policyId, newVcHash);
   await tx.wait();
@@ -55,7 +56,7 @@ export const updatePolicyVcHashOnChain = async (policyId, newVcHash) => {
  * Get complete policy details
  */
 export const getPolicyOnChain = async (policyId) => {
-  const registry = await getContract(POLICY_REGICTRY_ADDRESS, abiPath);
+  const registry = await getContract(POLICY_REGISTRY_ADDRESS, abiPath);
 
   const data = await registry.getPolicy(policyId);
 
@@ -71,7 +72,7 @@ export const getPolicyOnChain = async (policyId) => {
  * Check if a policy exists
  */
 export const isPolicyExists = async (policyId) => {
-  const registry = await getContract(POLICY_REGICTRY_ADDRESS, abiPath);
+  const registry = await getContract(POLICY_REGISTRY_ADDRESS, abiPath);
 
   const customer = await registry.policyCustomer(policyId);
   return customer !== "0x0000000000000000000000000000000000000000";
@@ -81,7 +82,7 @@ export const isPolicyExists = async (policyId) => {
  * Get next policy ID 
  */
 export const getNextPolicyId = async () => {
-  const registry = await getContract(POLICY_REGICTRY_ADDRESS, abiPath);
+  const registry = await getContract(POLICY_REGISTRY_ADDRESS, abiPath);
   return Number(await registry.nextPolicyId());
 };
 

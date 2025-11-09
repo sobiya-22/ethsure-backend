@@ -5,7 +5,7 @@ import Company from "../models/company.model.js";
 import { issueAgentVC } from "../VC/createVC.js";
 import { registerAgentOnChain } from "../blockchain/agentRegistry.js";
 
-const COMPANY_DID =process.env.COMPANY_DID;
+const COMPANY_DID = process.env.COMPANY_DID;
 
 const sendAssociationRequest = asyncHandler(async (req, res) => {
   const { data } = req.body;
@@ -22,12 +22,19 @@ const sendAssociationRequest = asyncHandler(async (req, res) => {
       message: "License Number is required",
     });
   }
+  if (!data.aadharcard_url || !data.pancard_url || !data.license_url) {
+    return res.status(400).json({
+      success: false,
+      message: "Upload all documents required to proceed",
+    });
+  }
   if (!data.terms_accepted) {
     return res.status(400).json({
       success: false,
       message: "First approve our terms and conditions",
     });
   }
+
   const agent = await Agent.findOne({ wallet_address: data.agent_wallet_address });
 
   if (!agent) {
@@ -44,6 +51,11 @@ const sendAssociationRequest = asyncHandler(async (req, res) => {
     });
   }
   agent.license_number = data.license_number;
+  agent.documents = {
+    aadharcard_url: data.aadharcard_url,
+    pancard_url: data.pancard_url,
+    license_url: data.license_url
+  }
   agent.associated_company = {
     company: process.env.COMPANY_MONGODB_ID, // hardcoded value
     status: "pending",
@@ -62,7 +74,6 @@ const sendAssociationRequest = asyncHandler(async (req, res) => {
     },
   });
 });
-
 
 
 //Get list of agents 
@@ -125,11 +136,11 @@ const updateAgentAssociationStatus = asyncHandler(async (req, res) => {
     });
   }
 
-  
+
   // Update status
   let blockchainTxn = null;
   agent.associated_company.status = newStatus;
-  
+
   if (newStatus === 'approved') {
     //issue agent vc
     const agentVC = await issueAgentVC({

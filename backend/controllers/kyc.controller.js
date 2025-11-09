@@ -4,9 +4,9 @@ import Customer from "../models/customer.model.js";
 import twilio from "twilio";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-const TWILIO_ACCOUNT_SID=process.env.TWILIO_ACCOUNT_SID
-const TWILIO_AUTH_TOKEN=process.env.TWILIO_AUTH_TOKEN
-const TWILIO_VERIFY_SERVICE_ID=process.env.TWILIO_VERIFY_SERVICE_ID
+const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID
+const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN
+const TWILIO_VERIFY_SERVICE_ID = process.env.TWILIO_VERIFY_SERVICE_ID
 
 const client = twilio(
   TWILIO_ACCOUNT_SID,
@@ -46,6 +46,17 @@ export const sendKYCOTP = asyncHandler(async (req, res) => {
   const formattedPhone = phone_number.startsWith("+")
     ? phone_number
     : `+91${phone_number}`;
+
+  console.log("SID:", process.env.TWILIO_ACCOUNT_SID)
+  console.log("TOKEN:", process.env.TWILIO_AUTH_TOKEN)
+  console.log("SERVICE:", process.env.TWILIO_VERIFY_SERVICE_ID)
+
+  try {
+    const data = await client.api.accounts(TWILIO_ACCOUNT_SID).fetch();
+    console.log("Auth OK:", data.status);
+  } catch (e) {
+    console.error("AUTH ERROR:", e);
+  }
 
   try {
     const result = await client.verify.v2

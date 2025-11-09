@@ -3,7 +3,7 @@ import Policy from "../models/policy.model.js";
 import Customer from "../models/customer.model.js"
 import Agent from "../models/agent.model.js"
 import {issuePolicyVC} from "../VC/createVC.js";
-import {createPolicyOnChain} from "../blockchain/policyRegistry.js";
+import {createPolicyOnChain, claimPolicyOnChain} from "../blockchain/policyRegistry.js";
 const COMPANY_DID = process.env.COMPANY_DID;
 
 
@@ -25,7 +25,7 @@ const createPolicy = asyncHandler(async (req, res) => {
     coverage_amount,
     premium_amount,
     premium_frequency,
-    policy_duration = 10,
+    policy_duration=10,
     nomineeName,
     nomineeAge,
     nomineeRelation,
@@ -88,7 +88,7 @@ const createPolicy = asyncHandler(async (req, res) => {
     coverage_amount: parseInt(coverage_amount) || 1000000,
     premium_amount: parseInt(premium_amount) || 50000,
     premium_frequency,
-    policy_duration: 10,
+    policy_duration,
     status: "created",
     nominee: {
       nominee_name: nomineeName,
@@ -260,7 +260,7 @@ const updatePolicyStatus = asyncHandler(async (req, res) => {
   }
 
   if(newStatus === 'claimed' && role==='customer'){
-    blockchainTxn = await claimPolicyOnChain(policy._id)
+    blockchainTxn = await claimPolicyOnChain(policy.onchain_policyID);
   }
   policy.status = newStatus;
   await policy.save();
