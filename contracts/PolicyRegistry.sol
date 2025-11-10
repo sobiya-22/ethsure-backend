@@ -4,6 +4,8 @@ pragma solidity ^0.8.19;
 contract PolicyRegistry {
     address public immutable companyAddress;
 
+    uint256 private _version_contract = 1;
+
     constructor(address _companyAddress) {
         require(_companyAddress != address(0), "Invalid company address");
         companyAddress = _companyAddress;
