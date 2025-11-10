@@ -186,72 +186,78 @@ const getPolicyById = asyncHandler(async (req, res) => {
 const updatePolicyStatus = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { newStatus, wallet_address, role } = req.body;
-  if (!id) return res.status(404).json({ success: false, message: "Policy ID is required!" });
+
+  if (!id) return res.status(400).json({ success: false, message: "Policy ID is required" });
 
   if (!wallet_address || !role || !newStatus) {
-    return res.status(404).json({ success: false, message: "Wallet addr,role and new status is required!" });
+    return res.status(400).json({ success: false, message: "Wallet address, role and new status are required" });
   }
 
   const policy = await Policy.findById(id).populate("customer");
-
   if (!policy) {
     return res.status(404).json({ success: false, message: "Policy not found" });
   }
 
   const currentStatus = policy.status;
 
-  // Define valid transitions per role
   const transitions = {
-    customer: { from: [null,"active"], to: ["created","request-claim"] }, // Customer creates policy
-    agent: { from: "created", to: ["agentApproved", "cancelled"] },
-    company: { from: ["agentApproved","request-claim"], to: ["active", "claimed", "cancelled"] },
+    customer: {
+      from: [null, "active"],
+      to: ["created", "request-claim"]
+    },
+    agent: {
+      from: ["created"],
+      to: ["agentApproved", "cancelled"]
+    },
+    company: {
+      from: ["agentApproved", "request-claim"],
+      to: ["active", "claimed", "cancelled"]
+    }
   };
 
-  // Validate role
-  if (!["customer", "agent", "company"].includes(role)) {
+
+  if (!transitions[role]) {
     return res.status(400).json({ success: false, message: "Invalid role" });
   }
 
-  // Validate transition logic
   const validFrom = transitions[role].from;
   const validTo = transitions[role].to;
 
-  if (validFrom && currentStatus !== validFrom) {
+  const isValidFrom = Array.isArray(validFrom)
+    ? validFrom.includes(currentStatus)
+    : validFrom === currentStatus;
+
+  if (!isValidFrom) {
     return res.status(400).json({
       success: false,
-      message: `Role '${role}' cannot update policy from '${currentStatus}'`,
+      message: `Role '${role}' cannot update policy from '${currentStatus}'`
     });
   }
 
   if (!validTo.includes(newStatus)) {
     return res.status(400).json({
       success: false,
-      message: `Invalid status ${newStatus} for role '${role}'`,
+      message: `Invalid status '${newStatus}' for role '${role}'`
     });
   }
-  console.log(policy);
-  if (
-    role === "agent" &&
-    (policy.agent_wallet_address !== wallet_address)
-  ) {
+
+  const COMPANY_ADDRESS = "0x87D757Fc89779c8aca68Dd9655dE948F4D17f0cf";
+
+  if (role === "customer" && policy.customer_wallet_address !== wallet_address) {
+    return res.status(403).json({ success: false, message: "Unauthorized customer" });
+  }
+
+  if (role === "agent" && policy.agent_wallet_address !== wallet_address) {
     return res.status(403).json({ success: false, message: "Unauthorized agent" });
   }
 
-  if (
-    role === "customer" &&
-    (policy.customer_wallet_address !== wallet_address)
-  ) {
-    return res.status(403).json({ success: false, message: "Unauthorized customer" });
-  }
-  const COMPANY_ADDRESS = '0x87D757Fc89779c8aca68Dd9655dE948F4D17f0cf'
-  if (
-    role === "company" &&
-    (COMPANY_ADDRESS !== wallet_address)
-  ) {
+  if (role === "company" && COMPANY_ADDRESS !== wallet_address) {
     return res.status(403).json({ success: false, message: "Unauthorized company" });
   }
+
   let blockchainTxn = null;
-  if (newStatus === 'active' && role === 'company') {
+
+  if (role === "company" && newStatus === "active") {
     const policyVC = await issuePolicyVC({
       policyId: policy._id,
       customerWallet: policy.customer_wallet_address,
@@ -262,29 +268,29 @@ const updatePolicyStatus = asyncHandler(async (req, res) => {
       status: newStatus,
       companyDid: COMPANY_DID
     });
-    console.log(policyVC);
+
     blockchainTxn = await createPolicyOnChain(
       policy.customer_wallet_address,
       policy.customer.customer_did,
       policyVC.hash
     );
+
     policy.policy_VC = policyVC;
     policy.txn_hash = blockchainTxn.txHash;
     policy.onchain_policyID = blockchainTxn.policyId;
   }
 
-  // if (newStatus === 'claimed' && role === 'customer') {
-  //   blockchainTxn = await claimPolicyOnChain(policy.onchain_policyID);
-  // }
   policy.status = newStatus;
   await policy.save();
 
   return res.status(200).json({
     success: true,
-    message: `Policy status updated to ${newStatus} by ${role}`,
-    policy,
+    message: `Policy updated to '${newStatus}' by ${role}`,
+    blockchainTxn,
+    policy
   });
 });
+
 
 const claimPolicyRequest = asyncHandler(async (req, res) => {
   const { id } = req.params;

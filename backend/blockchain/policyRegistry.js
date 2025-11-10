@@ -32,7 +32,7 @@ export const createPolicyOnChain = async (customerAddress, customerDid, vcHash) 
  * Claim a policy (customer only)
  */
 export const claimPolicyOnChain = async (policyId) => {
-  const registry = await getContract(POLICY_REGISTRY_ADDRESS, abiPath);
+  const registry = await getContract(POLICY_REGISTRY_ADDRESS, abiPath, true);
 
   const tx = await registry.claimPolicy(policyId);
   await tx.wait();
