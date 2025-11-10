@@ -396,7 +396,7 @@ const claimPolicyCompanyCheck = asyncHandler(async (req, res) => {
 
     policy.claim_data.claim_status = "approved";
     policy.claim_data.approval_date = new Date();
-    policy.claim_data.claim_txnhash = blockchainTxn?.txHash || null;
+    policy.claim_data.claim_txnhash = blockchainTxn || null;
 
     policy.status = "claimed";
 
@@ -405,7 +405,7 @@ const claimPolicyCompanyCheck = asyncHandler(async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Claim approved successfully",
-      claim_txnhash: blockchainTxn?.txHash,
+      claim_txnhash: blockchainTxn,
       policy,
     });
   }
