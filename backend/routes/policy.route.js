@@ -1,5 +1,5 @@
 import express from "express";
-import { createPolicy, getPolicies, getPolicyById, updatePolicyStatus } from "../controllers/policy.controller.js";
+import { claimPolicyCompanyCheck,claimPolicyRequest, createPolicy, getPolicies, getPolicyById, updatePolicyStatus } from "../controllers/policy.controller.js";
 
 const router = express.Router();
 
@@ -15,4 +15,9 @@ router.get("/:id", getPolicyById);
 // Update policy status
 router.post("/update-status/:id", updatePolicyStatus);
 
+//claim policy 
+router.post('/claim-policy/:id',claimPolicyRequest);
+
+
+router.post('/update-claim-status/:id',claimPolicyCompanyCheck)
 export default router;

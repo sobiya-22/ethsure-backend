@@ -4,6 +4,7 @@ import Customer from "../models/customer.model.js"
 import Agent from "../models/agent.model.js"
 import { issuePolicyVC } from "../VC/createVC.js";
 import { createPolicyOnChain, claimPolicyOnChain } from "../blockchain/policyRegistry.js";
+// import { query } from "express";
 const COMPANY_DID = process.env.COMPANY_DID;
 
 
@@ -143,8 +144,8 @@ const getPolicies = asyncHandler(async (req, res) => {
   if (agent_wallet_address) {
     filter.agent_wallet_address = agent_wallet_address;
   }
-  filter.status = { $ne: "claimed" };
-  if (status && status !== 'claimed') filter.status = status;
+  // filter.status = { $ne: "claimed" };
+  if (status) filter.status = status;
 
   console.log("Filter being applied:", filter);
 
@@ -201,9 +202,9 @@ const updatePolicyStatus = asyncHandler(async (req, res) => {
 
   // Define valid transitions per role
   const transitions = {
-    customer: { from: null, to: ["created", "claimed"] }, // Customer creates policy
+    customer: { from: [null,"active"], to: ["created","request-claim"] }, // Customer creates policy
     agent: { from: "created", to: ["agentApproved", "cancelled"] },
-    company: { from: "agentApproved", to: ["active", "cancelled"] },
+    company: { from: ["agentApproved","request-claim"], to: ["active", "claimed", "cancelled"] },
   };
 
   // Validate role
@@ -272,9 +273,9 @@ const updatePolicyStatus = asyncHandler(async (req, res) => {
     policy.onchain_policyID = blockchainTxn.policyId;
   }
 
-  if (newStatus === 'claimed' && role === 'customer') {
-    blockchainTxn = await claimPolicyOnChain(policy.onchain_policyID);
-  }
+  // if (newStatus === 'claimed' && role === 'customer') {
+  //   blockchainTxn = await claimPolicyOnChain(policy.onchain_policyID);
+  // }
   policy.status = newStatus;
   await policy.save();
 
@@ -285,10 +286,143 @@ const updatePolicyStatus = asyncHandler(async (req, res) => {
   });
 });
 
+const claimPolicyRequest = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({ success: false, message: "Policy ID is required" });
+  }
+
+  const {
+    customer_wallet_address,
+    claimant_type,
+    claimant_name,
+    claimant_phone,
+    claimant_email,
+    claimant_relation,
+    claimant_id_number,
+    claim_reason,
+    claim_description,
+    incident_date,
+    claim_amount,
+    death_certificate_url,
+    medical_reports_url,
+    claimant_id_url,
+    police_report_url,
+    newStatus = "request-claim"
+  } = req.body;
+
+  const policy = await Policy.findById(id);
+  if (!policy) {
+    return res.status(404).json({ success: false, message: "Policy not found" });
+  }
+
+  if (policy.customer_wallet_address !== customer_wallet_address) {
+    return res.status(403).json({ success: false, message: "Unauthorized customer" });
+  }
+
+  policy.claim_data = {
+    claimant_type,
+    claimant_name,
+    claimant_phone,
+    claimant_email,
+    claimant_relation,
+    claimant_id_number,
+    claim_reason,
+    claim_description,
+    incident_date,
+    claim_amount,
+    claim_status: "pending", 
+    claim_documents: {
+      death_certificate_url,
+      medical_reports_url,
+      claimant_id_url,
+      police_report_url
+    },
+    claim_request_date: new Date()
+  };
+
+  policy.status = newStatus; // should be request-claim
+
+  await policy.save();
+
+  return res.status(200).json({
+    success: true,
+    message: "Claim request submitted successfully",
+    policy
+  });
+});
+const claimPolicyCompanyCheck = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const {claim_status, wallet_address } = req.body;
+  console.log(req.query, req.params, req.body);
+  const COMPANY_ADDRESS = "0x87D757Fc89779c8aca68Dd9655dE948F4D17f0cf";
+
+  if (!id || !claim_status) {
+    return res.status(400).json({ success: false, message: "Policy ID and status are required" });
+  }
+
+  if (!["approved", "rejected"].includes(claim_status)) {
+    return res.status(400).json({ success: false, message: "Invalid status. Use ?status=approved or ?status=rejected" });
+  }
+
+  if (wallet_address !== COMPANY_ADDRESS) {
+    return res.status(403).json({ success: false, message: "Unauthorized company wallet" });
+  }
+
+  const policy = await Policy.findById(id);
+  if (!policy) {
+    return res.status(404).json({ success: false, message: "Policy not found" });
+  }
+
+  if (claim_status === "approved") {
+    let blockchainTxn = null;
+
+    try {
+      blockchainTxn = await claimPolicyOnChain(policy.onchain_policyID);
+    } catch (err) {
+      console.error("Blockchain claim error:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to process blockchain claim",
+      });
+    }
+
+    policy.claim_data.claim_status = "approved";
+    policy.claim_data.approval_date = new Date();
+    policy.claim_data.claim_txnhash = blockchainTxn?.txHash || null;
+
+    policy.status = "claimed";
+
+    await policy.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Claim approved successfully",
+      claim_txnhash: blockchainTxn?.txHash,
+      policy,
+    });
+  }
+
+  if (claim_status === "rejected") {
+    policy.claim_data.claim_status = "rejected";
+    policy.status = "cancelled";
+
+    await policy.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Claim rejected successfully",
+      policy,
+    });
+  }
+});
 
 export {
   createPolicy,
   getPolicies,
   getPolicyById,
-  updatePolicyStatus
+  updatePolicyStatus,
+  claimPolicyRequest,
+  claimPolicyCompanyCheck
 };

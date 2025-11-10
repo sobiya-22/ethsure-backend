@@ -2,6 +2,13 @@
 pragma solidity ^0.8.19;
 
 contract PolicyRegistry {
+    address public immutable companyAddress;
+
+    constructor(address _companyAddress) {
+        require(_companyAddress != address(0), "Invalid company address");
+        companyAddress = _companyAddress;
+    }
+
     // policyId => customer wallet address
     mapping(uint256 => address) public policyCustomer;
 
@@ -46,22 +53,21 @@ contract PolicyRegistry {
         policyCustomer[pid] = customer;
         policyCustomerDID[pid] = customerDid;
         policyVcHash[pid] = vcHash;
-        policyActive[pid] = true; // active when created
+        policyActive[pid] = true;
 
         emit PolicyCreated(pid, customer, customerDid, vcHash);
 
         return pid;
     }
 
-    /// @notice Customer claims their policy — status becomes inactive
     function claimPolicy(uint256 policyId) external {
         require(policyCustomer[policyId] != address(0), "Policy not found");
-        require(msg.sender == policyCustomer[policyId], "Not policy owner");
+        require(msg.sender == companyAddress, "Only company can approve claim");
         require(policyActive[policyId], "Already claimed");
 
         policyActive[policyId] = false;
 
-        emit PolicyClaimed(policyId, msg.sender);
+        emit PolicyClaimed(policyId, policyCustomer[policyId]);
     }
 
     /// @notice Update only the VC hash for a policy

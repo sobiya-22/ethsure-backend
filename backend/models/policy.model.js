@@ -105,7 +105,7 @@ const PolicySchema = new mongoose.Schema({
     // Policy status
     status: {
         type: String,
-        enum: ["created", "agentApproved", "active", "claimed", "cancelled", "expired"],
+        enum: ["created", "agentApproved", "active", "claimed","request-claim", "cancelled"],
         default: "created"
     },
     created_date: {
@@ -146,6 +146,79 @@ const PolicySchema = new mongoose.Schema({
         },
         nominee_id_url: {
             type: String
+        }
+    },
+    claim_data: {
+        claimant_type: {
+            type: String,
+            enum: ["self", "nominee", "other"]
+        },
+        claimant_name: {
+            type: String,
+            trim: true
+        },
+        claimant_phone: {
+            type: String,
+            match: [/^\d{10}$/, 'Please enter a valid 10-digit phone number']
+        },
+        claimant_email: {
+            type: String,
+            lowercase: true
+        },
+        claimant_relation: {
+            type: String,
+            trim: true
+        },
+        claimant_id_number: {
+            type: String,
+            trim: true
+        },
+        claim_reason: {
+            type: String,
+            enum: ["death", "critical_illness", "accident", "maturity", "other"]
+        },
+        claim_description: {
+            type: String
+        },
+        incident_date: {
+            type: Date
+        },
+        claim_amount: {
+            type: Number,
+            min: 0
+        },
+        claim_status: {
+            type: String,
+            enum: ["pending", "under_review", "approved", "rejected", "paid"],
+            default: "pending"
+        },
+        claim_request_date: {
+            type: Date,
+            default: Date.now
+        },
+        claim_documents: {
+            death_certificate_url: {
+                type: String
+            },
+            medical_reports_url: {
+                type: String
+            },
+            claimant_id_url: {
+                type: String
+            },
+            police_report_url: {
+                type: String
+            }
+        },
+        approved_amount: {
+            type: Number,
+            min: 0
+        },
+        approval_date: {
+            type: Date
+        },
+        claim_txnhash: {
+            type:String,
         }
     }
 }, {
